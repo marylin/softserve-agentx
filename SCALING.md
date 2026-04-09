@@ -9,6 +9,8 @@ The system runs as a **single-instance synchronous pipeline**:
 - Expected end-to-end latency: 15-60 seconds depending on Triage Agent tool call depth
 - Database: single PostgreSQL instance with no connection pooling beyond SQLAlchemy's default async pool
 - File storage: local Docker volume for uploads
+- Auto-escalation: background task runs every 60 seconds, checking SLA breaches and escalating severity (a reliability feature that works at any scale)
+- Metrics endpoint: `/metrics/` aggregates status, severity, and component distributions from the database (foundation for monitoring dashboards at scale)
 
 **Assumptions for v1:**
 - Single-tenant deployment
@@ -163,8 +165,14 @@ Per-incident cost estimate using Claude Sonnet 4 pricing ($3/MTok input, $15/MTo
 - SLA requirement for time-to-triage drops below 60 seconds at p95
 - Need for incident priority queuing (P1 incidents should jump the queue)
 
+### Team Customization Layer
+
+The `agent-config.yaml` file provides a zero-code customization layer for teams. Severity criteria, SLA thresholds, notification routing rules, affected area lists, and agent tool limits are all editable without code changes. At scale, this enables multi-team deployments where each team has its own configuration (loaded per-request from the YAML file or, in a multi-tenant setup, from a database-backed config store).
+
 ### What Does Not Need to Scale
 
 - **Knowledge base:** The Medusa.js knowledge base (module index, docs, error patterns) is read-only and fits in memory. It does not need a database or search engine.
 - **Frontend:** Static assets served from CDN. No server-side rendering. No WebSocket connections (uses polling).
 - **Integration APIs:** Linear, Slack, and Resend are external services with their own scaling. Our usage is well within their free/standard tier limits for any reasonable incident volume.
+- **Metrics endpoint:** The `/metrics/` endpoint aggregates data directly from PostgreSQL. At higher volumes, this could be backed by a materialized view or pre-computed cache (Redis) to avoid repeated aggregation queries, but at current scale it runs fast enough as a live query.
+- **Auto-escalation:** The escalation loop queries a small set of open incidents every 60 seconds. Even at thousands of incidents/day, the number of simultaneously open (non-resolved) incidents remains bounded. No scaling concern.
