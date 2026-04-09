@@ -200,7 +200,7 @@ This strategy avoids loading large amounts of irrelevant context. The agent driv
   4. Triage Agent calls `search_modules("cart checkout")`, reads the matched module documentation, then calls `search_codebase("500", "*.ts")` to find relevant error handling code. It classifies the incident as P2 (High) with 0.8 confidence, lists `cart` and `checkout` as affected modules, and provides code references pointing to the cart service handler.
   5. Router Agent creates a Linear ticket titled "[P2] Checkout 500 error on /store/cart" with priority 2, sends a Slack notification to the general channel, and emails the reporter.
   6. Frontend displays the completed triage: severity badge, confidence percentage, affected modules, code references with file paths, runbook steps, and a link to the Linear ticket.
-- **Expected outcome:** Incident fully triaged and routed in under 30 seconds. The reporter has a Linear ticket link and knows the severity without any manual intervention.
+- **Expected outcome:** Incident fully triaged and routed in 60-90 seconds. The reporter has a Linear ticket link and knows the severity without any manual intervention.
 
 ### Use Case 2: Critical P1 with Screen Recording
 
