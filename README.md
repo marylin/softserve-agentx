@@ -1,6 +1,19 @@
 # AgentX SRE Triage Agent
 
-An AI-powered incident intake and triage system for Medusa.js e-commerce platforms. AgentX uses a multi-agent pipeline built on the Anthropic SDK to accept incident reports (text, screenshots, screen recordings, log files), automatically assess severity, identify affected codebase modules, generate runbook steps, and route the incident to Linear, Slack, and email -- all without human intervention.
+Manual SRE triage takes 15-30 minutes on average -- reading the report, searching the codebase, classifying severity, filing a ticket, and pinging the right team. AgentX reduces this to under 30 seconds. From incident report to triaged Linear ticket with severity classification, codebase analysis, runbook steps, and team notifications across Slack and email -- fully autonomous, no human in the loop.
+
+## Key Metrics
+
+| Metric | Value |
+|--------|-------|
+| Pipeline time (end-to-end) | 15-45 seconds |
+| Cost per incident | ~$0.04-0.12 (Claude Sonnet) |
+| Agents | 3 specialized (Intake, Triage, Router) |
+| Codebase tools | 6 autonomous investigation tools |
+| Knowledge base | 10 modules, 54 API routes, 30 error patterns |
+| Automated tests | 62 passing |
+| Integrations | Linear + Slack + Resend (all real, not mocked) |
+| Multimodal inputs | Text, screenshots, screen recordings, log files |
 
 ## Architecture
 
@@ -60,6 +73,24 @@ An AI-powered incident intake and triage system for Medusa.js e-commerce platfor
 | Logging        | structlog (JSON structured logs)          |
 | Infrastructure | Docker Compose                            |
 | Validation     | Pydantic v2, pydantic-settings            |
+
+## Project Structure
+
+```
+softserve-agentx/
+  docker-compose.yml          # Multi-service orchestration
+  .env.example                # All configuration with setup links
+  frontend/
+    src/components/            # React UI (form, recorder, tracker, dashboard)
+  backend/
+    src/agents/                # Intake, Triage, Router agents
+    src/agents/tools/          # Linear, Slack, Resend, codebase analysis
+    src/security/              # Input validation, prompt injection defense
+    src/observability/         # Langfuse tracing, structured logging
+    knowledge-base/            # Pre-built Medusa.js module docs, API routes, error patterns
+    medusa-subset/             # Curated source code for agent analysis
+    tests/                     # 62 tests (security, state machine, parsing)
+```
 
 ## Features
 
