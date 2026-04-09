@@ -196,18 +196,18 @@ export default function IncidentForm({ onSubmitted }: Props) {
       </div>
 
       <div>
-        <div className="mb-1 flex items-center justify-between">
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
           <label htmlFor="incident-description" className="block text-sm font-medium text-gray-300">
             Description
           </label>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {speechSupported && (
               <button
                 type="button"
                 onClick={handleVoice}
                 aria-label={listening ? "Stop voice recording" : "Start voice input"}
                 aria-pressed={listening}
-                className={`text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded ${listening ? "text-red-400" : "text-indigo-400 hover:text-indigo-300"}`}
+                className={`text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded min-h-[44px] sm:min-h-0 px-1 ${listening ? "text-red-400" : "text-indigo-400 hover:text-indigo-300"}`}
               >
                 <Mic className="w-3 h-3" aria-hidden="true" />
                 {listening ? "Stop" : "Dictate"}
@@ -217,7 +217,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
               type="button"
               onClick={handleSuggest}
               disabled={!title || suggesting}
-              className="text-sm text-indigo-400 hover:text-indigo-300 disabled:text-gray-600 flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
+              className="text-sm text-indigo-400 hover:text-indigo-300 disabled:text-gray-600 flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded min-h-[44px] sm:min-h-0 px-1"
             >
               {suggesting ? (
                 <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
@@ -306,7 +306,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
       <button
         type="submit"
         disabled={submitting}
-        className="flex items-center gap-2 rounded bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        className="w-full sm:w-auto flex items-center justify-center gap-2 rounded bg-indigo-600 px-5 py-2.5 min-h-[44px] text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
       >
         {submitting && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
         {submitting ? "Submitting..." : "Submit incident"}

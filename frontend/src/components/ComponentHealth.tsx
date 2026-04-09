@@ -203,7 +203,7 @@ export default function ComponentHealth({ onSelectComponent }: Props) {
                   onSelectComponent?.(comp.name);
                 }
               }}
-              className="flex items-center justify-between px-4 py-3 border-b border-gray-800 last:border-0 cursor-pointer hover:bg-gray-800/50 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+              className="flex items-center justify-between px-4 py-3 min-h-[44px] border-b border-gray-800 last:border-0 cursor-pointer hover:bg-gray-800/50 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${cfg.dotColor}`} />
@@ -215,10 +215,10 @@ export default function ComponentHealth({ onSelectComponent }: Props) {
                 <span className={`text-xs font-medium ${cfg.textColor}`}>
                   {cfg.label}
                 </span>
-                <span className="text-xs text-gray-400 w-20 text-right">
+                <span className="text-xs text-gray-400 w-16 sm:w-20 text-right">
                   {comp.openCount} open
                 </span>
-                <span className="text-xs text-gray-500 w-24 text-right">
+                <span className="hidden sm:block text-xs text-gray-500 w-24 text-right">
                   {comp.lastIncidentTime
                     ? relativeTime(comp.lastIncidentTime)
                     : "No incidents"}

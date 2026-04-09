@@ -53,7 +53,7 @@ const statusLabel: Record<IncidentStatus, string> = {
 const ALL_SEVERITIES: SeverityLevel[] = ["P1", "P2", "P3", "P4"];
 const ALL_STATUSES: IncidentStatus[] = ["received", "triaging", "triaged", "routed", "resolved", "failed"];
 
-const filterInputClasses = "bg-gray-900 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500";
+const filterInputClasses = "bg-gray-900 border border-gray-700 rounded px-3 py-2 sm:py-1.5 text-sm text-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-h-[44px] sm:min-h-0";
 
 export default function IncidentList({ onSelect, onReportNew }: Props) {
   const [incidents, setIncidents] = useState<IncidentListItem[]>([]);
@@ -150,8 +150,8 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
         </div>
       </div>
 
-      <div className="flex gap-3 flex-wrap items-center">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
@@ -218,11 +218,11 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
             <thead>
               <tr className="border-b border-gray-800 bg-gray-900/60 text-xs uppercase tracking-wide text-gray-400">
                 <th className="px-4 py-3 font-medium">Title</th>
-                <th className="px-4 py-3 font-medium">Reporter</th>
+                <th className="px-4 py-3 font-medium hidden sm:table-cell">Reporter</th>
                 <th className="px-4 py-3 font-medium">Severity</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Age</th>
-                <th className="px-4 py-3 font-medium">Reported</th>
+                <th className="px-4 py-3 font-medium hidden md:table-cell">Reported</th>
               </tr>
             </thead>
             <tbody>
@@ -233,10 +233,10 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
                   tabIndex={0}
                   role="button"
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(inc.id); } }}
-                  className="cursor-pointer border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors focus:outline-none focus:bg-gray-800/40"
+                  className="cursor-pointer border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors focus:outline-none focus:bg-gray-800/40 min-h-[44px]"
                 >
-                  <td className="px-4 py-3 text-gray-200">{inc.title}</td>
-                  <td className="px-4 py-3 text-gray-400">{inc.reporter_name}</td>
+                  <td className="px-4 py-3 text-gray-200 max-w-[200px] sm:max-w-none truncate">{inc.title}</td>
+                  <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">{inc.reporter_name}</td>
                   <td className="px-4 py-3">
                     {inc.severity ? (
                       <SeverityBadge level={inc.severity} />
@@ -258,7 +258,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
                       {formatAge(inc.created_at)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-4 py-3 text-gray-500 hidden md:table-cell">
                     {formatReported(inc.created_at)}
                   </td>
                 </tr>

@@ -193,7 +193,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
         {STEPS.map((step, i) => {
           const done = !failed && current >= i;
           // Spinner shows on the NEXT step after current (the one being worked on)
@@ -203,7 +203,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
             <div key={step.key} className="flex items-center gap-2">
               {i > 0 && (
                 <div
-                  className={`h-px w-6 ${done ? "bg-indigo-500" : "bg-gray-700"}`}
+                  className={`hidden sm:block h-px w-6 ${done ? "bg-indigo-500" : "bg-gray-700"}`}
                 />
               )}
               <div className="flex items-center gap-1.5">
@@ -514,7 +514,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                         <img
                           src={url}
                           alt={att.original_filename}
-                          className="max-w-xs rounded border border-gray-700"
+                          className="max-w-full sm:max-w-xs rounded border border-gray-700"
                         />
                         <span className="mt-1 flex items-center gap-2 text-xs text-gray-400">
                           <Paperclip className="w-3 h-3" />

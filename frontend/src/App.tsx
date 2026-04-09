@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, FileText } from "lucide-react";
+import { Shield, FileText, Plus, List, BarChart3, Activity } from "lucide-react";
 import IncidentForm from "./components/IncidentForm";
 import IncidentList from "./components/IncidentList";
 import MetricsDashboard from "./components/MetricsDashboard";
@@ -66,33 +66,36 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-950">
-      <header className="border-b border-gray-800 px-6 py-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="border-b border-gray-800 px-4 sm:px-6 py-4">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <Shield className="w-6 h-6 text-indigo-500" />
             <h1 className="text-lg font-semibold tracking-tight text-gray-100">
-              AgentX <span className="font-normal text-gray-400">SRE Triage</span>
+              AgentX <span className="hidden sm:inline font-normal text-gray-400">SRE Triage</span>
             </h1>
           </div>
-          <nav className="flex gap-4">
+          <nav className="flex flex-wrap gap-1 sm:gap-4 justify-end">
             <button
               onClick={() => navigate("form")}
-              className={`px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
+              className={`min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 flex items-center gap-1.5 ${
                 view === "form"
                   ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
-              Report Incident
+              <Plus className="w-4 h-4 sm:hidden" />
+              <span className="hidden sm:inline">Report Incident</span>
+              <span className="sm:hidden">Report</span>
             </button>
             <button
               onClick={() => navigate("list")}
-              className={`relative px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
+              className={`relative min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 flex items-center gap-1.5 ${
                 view === "list"
                   ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
+              <List className="w-4 h-4 sm:hidden" />
               Incidents
               {alertCounts.open > 0 && (
                 <span className="absolute -top-1 -right-1 bg-indigo-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
@@ -102,22 +105,24 @@ export default function App() {
             </button>
             <button
               onClick={() => navigate("metrics")}
-              className={`px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
+              className={`min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 flex items-center gap-1.5 ${
                 view === "metrics"
                   ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
+              <BarChart3 className="w-4 h-4 sm:hidden" />
               Metrics
             </button>
             <button
               onClick={() => navigate("health")}
-              className={`relative px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
+              className={`relative min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 flex items-center gap-1.5 ${
                 view === "health"
                   ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
+              <Activity className="w-4 h-4 sm:hidden" />
               Health
               {alertCounts.critical > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-2 h-2" />
@@ -127,15 +132,15 @@ export default function App() {
               href={`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/docs`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-300 text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
+              className="min-h-[44px] sm:min-h-0 text-gray-500 hover:text-gray-300 text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-2 sm:px-0"
             >
               <FileText className="w-3.5 h-3.5" />
-              API
+              <span className="hidden sm:inline">API</span>
             </a>
           </nav>
         </div>
       </header>
-      <main className="max-w-5xl mx-auto p-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         {view === "form" && (
           <IncidentForm
             onSubmitted={(id) => navigate("detail", id)}
