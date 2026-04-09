@@ -1,5 +1,6 @@
 import os
 import re
+import unicodedata
 
 INJECTION_PATTERNS = [
     re.compile(p, re.IGNORECASE)
@@ -18,6 +19,16 @@ INJECTION_PATTERNS = [
 ]
 
 MAX_TEXT_LENGTH = 10_000
+
+
+def normalize_unicode(text: str) -> str:
+    """Normalize Unicode to NFC form and strip zero-width characters."""
+    # Remove zero-width characters that could bypass pattern matching
+    zero_width = '\u200b\u200c\u200d\u2060\ufeff'
+    for char in zero_width:
+        text = text.replace(char, '')
+    # Normalize to NFC to prevent homoglyph attacks
+    return unicodedata.normalize('NFC', text)
 
 ALLOWED_FILE_TYPES = {
     "image": {
@@ -52,6 +63,7 @@ ALLOWED_FILE_TYPES = {
 
 def check_prompt_injection(text: str) -> tuple[bool, str | None]:
     """Return (is_safe, matched_pattern). is_safe=True means no injection found."""
+    text = normalize_unicode(text)
     for pattern in INJECTION_PATTERNS:
         if pattern.search(text):
             return False, pattern.pattern
@@ -62,6 +74,8 @@ def validate_text_input(text: str) -> tuple[bool, str | None]:
     """Return (is_valid, error). is_valid=True means input is acceptable."""
     if not text or not text.strip():
         return False, "Text input is empty"
+
+    text = normalize_unicode(text)
 
     if len(text) > MAX_TEXT_LENGTH:
         return False, f"Text exceeds maximum length of {MAX_TEXT_LENGTH} characters"
