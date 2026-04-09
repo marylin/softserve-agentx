@@ -57,6 +57,21 @@ async def health():
     return {"status": "ok"}
 
 
+@app.get("/debug/pipeline/{incident_id}")
+async def debug_pipeline(incident_id: str):
+    """Temporary diagnostic -- run pipeline synchronously to see errors."""
+    from uuid import UUID
+    from src.db.database import async_session
+    try:
+        from src.agents.orchestrator import run_pipeline
+        async with async_session() as db:
+            await run_pipeline(UUID(incident_id), db)
+        return {"status": "completed"}
+    except Exception as e:
+        import traceback
+        return {"status": "error", "error": str(e), "type": type(e).__name__, "trace": traceback.format_exc()[-1000:]}
+
+
 @app.get("/debug/db")
 async def debug_db():
     """Temporary diagnostic -- remove before submission."""
