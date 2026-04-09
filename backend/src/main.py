@@ -43,3 +43,16 @@ app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/debug/db")
+async def debug_db():
+    """Temporary diagnostic -- remove before submission."""
+    from sqlalchemy import text
+    from src.db.database import engine
+    try:
+        async with engine.connect() as conn:
+            r = await conn.execute(text("SELECT 1"))
+            return {"db": "ok", "result": r.scalar(), "url_prefix": settings.database_url[:40]}
+    except Exception as e:
+        return {"db": "error", "error": str(e), "type": type(e).__name__, "url_prefix": settings.database_url[:40]}
