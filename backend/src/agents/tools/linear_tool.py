@@ -19,29 +19,31 @@ def create_linear_ticket(title: str, description: str, severity: str) -> str:
     priority = SEVERITY_PRIORITY.get(severity, 3)
 
     mutation = """
-    mutation CreateIssue($title: String!, $description: String!, $teamId: String!, $priority: Int) {
-        issueCreate(input: {
-            title: $title,
-            description: $description,
-            teamId: $teamId,
-            priority: $priority
-        }) {
+    mutation CreateIssue($input: IssueCreateInput!) {
+        issueCreate(input: $input) {
             success
             issue {
                 id
                 identifier
                 url
+                assignee { name }
             }
         }
     }
     """
 
-    variables = {
+    issue_input = {
         "title": f"[{severity}] {title}",
         "description": description,
         "teamId": settings.linear_team_id,
         "priority": priority,
     }
+
+    # Auto-assign P1/P2 incidents to the default assignee
+    if settings.linear_default_assignee_id and severity in ("P1", "P2"):
+        issue_input["assigneeId"] = settings.linear_default_assignee_id
+
+    variables = {"input": issue_input}
 
     try:
         resp = httpx.post(

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     linear_api_key: str = ""
     linear_team_id: str = ""
     linear_webhook_secret: str = ""
+    linear_default_assignee_id: str = ""
 
     slack_webhook_critical: str = ""
     slack_webhook_general: str = ""
