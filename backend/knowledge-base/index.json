@@ -1,0 +1,107 @@
+{
+  "framework": "Medusa.js",
+  "version": "2.x",
+  "description": "Module registry for the Medusa v2 e-commerce framework. Used by the Triage Agent to map incidents to the relevant module and codebase area.",
+  "modules": [
+    {
+      "name": "cart",
+      "description": "Manages shopping carts, line items, shipping methods, and cart completion workflows. Orchestrates the transition from cart to order.",
+      "keywords": ["cart", "line item", "line_item", "shipping method", "cart completion", "checkout", "add to cart", "remove from cart", "update cart", "draft order"]
+    },
+    {
+      "name": "order",
+      "description": "Handles order lifecycle from creation through fulfillment, returns, exchanges, and refunds. Manages order edits and claims.",
+      "keywords": ["order", "fulfillment", "return", "exchange", "refund", "claim", "order edit", "swap", "order status", "capture", "archive"]
+    },
+    {
+      "name": "payment",
+      "description": "Processes payments through provider plugins (Stripe, PayPal, etc.). Manages payment sessions, captures, refunds, and webhooks.",
+      "keywords": ["payment", "payment session", "capture", "refund", "payment provider", "stripe", "paypal", "webhook", "payment collection", "authorize"]
+    },
+    {
+      "name": "product",
+      "description": "Manages product catalog including products, variants, options, categories, collections, tags, and types. Handles product images and metadata.",
+      "keywords": ["product", "variant", "option", "category", "collection", "tag", "type", "image", "product status", "inventory item", "sku"]
+    },
+    {
+      "name": "customer",
+      "description": "Manages customer accounts, groups, addresses, and authentication. Supports guest customers and registered customers.",
+      "keywords": ["customer", "customer group", "address", "guest", "account", "registration", "customer address", "customer metadata"]
+    },
+    {
+      "name": "fulfillment",
+      "description": "Orchestrates order fulfillment through fulfillment providers. Manages shipments, tracking, and delivery notifications.",
+      "keywords": ["fulfillment", "shipping", "shipment", "tracking", "delivery", "fulfillment provider", "shipping option", "shipping profile", "geo zone", "service zone"]
+    },
+    {
+      "name": "inventory",
+      "description": "Tracks product inventory levels, reservations, and stock movements across locations. Manages inventory items and stock location associations.",
+      "keywords": ["inventory", "stock", "reservation", "inventory level", "inventory item", "stock location", "quantity", "reserved quantity", "available quantity"]
+    },
+    {
+      "name": "pricing",
+      "description": "Manages product pricing including price lists, price rules, currency-specific prices, and customer-group pricing. Handles price selection logic.",
+      "keywords": ["pricing", "price", "price list", "money amount", "currency", "price rule", "price set", "calculated price"]
+    },
+    {
+      "name": "promotion",
+      "description": "Manages discount codes, promotions, campaign rules, and automatic promotions. Handles promotion validation and application to carts.",
+      "keywords": ["promotion", "discount", "coupon", "campaign", "promotion rule", "application method", "buy rules", "target rules", "budget"]
+    },
+    {
+      "name": "region",
+      "description": "Manages geographic regions with associated currencies, tax rates, payment providers, and fulfillment providers. Controls regional availability.",
+      "keywords": ["region", "country", "currency", "tax rate", "regional settings", "locale"]
+    },
+    {
+      "name": "store",
+      "description": "Manages store-level configuration including name, currencies, default settings, and metadata. Provides global store context.",
+      "keywords": ["store", "store settings", "default currency", "swap link template", "invite link template", "metadata"]
+    },
+    {
+      "name": "user",
+      "description": "Manages admin users, roles, and invitations. Handles admin authentication separately from customer auth.",
+      "keywords": ["user", "admin", "invite", "role", "admin user", "team member"]
+    },
+    {
+      "name": "auth",
+      "description": "Handles authentication and authorization for both admin users and customers. Supports multiple auth providers (email/password, social, API keys).",
+      "keywords": ["auth", "authentication", "authorization", "login", "jwt", "token", "session", "auth provider", "identity", "api key"]
+    },
+    {
+      "name": "notification",
+      "description": "Manages event-driven notifications through provider plugins (email, SMS, push). Handles notification templates and delivery tracking.",
+      "keywords": ["notification", "email", "sms", "push", "notification provider", "sendgrid", "template", "event", "subscriber"]
+    },
+    {
+      "name": "tax",
+      "description": "Calculates taxes for cart items and shipping using tax providers. Manages tax regions, rates, and overrides.",
+      "keywords": ["tax", "tax rate", "tax region", "tax line", "tax provider", "vat", "sales tax", "tax override", "tax calculation"]
+    },
+    {
+      "name": "currency",
+      "description": "Manages supported currencies and exchange rate data. Provides currency formatting and conversion utilities.",
+      "keywords": ["currency", "exchange rate", "money", "ISO currency", "currency code"]
+    },
+    {
+      "name": "sales-channel",
+      "description": "Manages sales channels (web, mobile, POS, marketplace) and controls product availability per channel.",
+      "keywords": ["sales channel", "channel", "storefront", "marketplace", "POS", "product availability"]
+    },
+    {
+      "name": "api-key",
+      "description": "Manages publishable and secret API keys for authenticating storefront and admin API requests.",
+      "keywords": ["api key", "publishable key", "secret key", "key management", "api authentication"]
+    },
+    {
+      "name": "stock-location",
+      "description": "Manages physical stock locations (warehouses, stores) and their addresses. Links to inventory and fulfillment modules.",
+      "keywords": ["stock location", "warehouse", "location", "fulfillment set", "location address"]
+    },
+    {
+      "name": "workflow",
+      "description": "Orchestrates multi-step business processes using durable workflow engine. Manages compensation (rollback) logic and step retries.",
+      "keywords": ["workflow", "step", "compensation", "rollback", "transaction", "pipe", "transform", "workflow engine", "idempotency"]
+    }
+  ]
+}

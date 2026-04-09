@@ -1,0 +1,185 @@
+{
+  "description": "Common Medusa v2 error patterns for incident triage. Patterns are matched against incident logs and error messages.",
+  "patterns": [
+    {
+      "pattern": "Cart not found",
+      "module": "cart",
+      "cause": "The cart ID does not exist or the cart has already been completed and converted to an order.",
+      "resolution": "Verify the cart ID is correct. If the cart was completed, access the order instead. Check for race conditions where the same cart completion is called multiple times."
+    },
+    {
+      "pattern": "Insufficient inventory for item",
+      "module": "inventory",
+      "cause": "The requested quantity exceeds available stock (stocked_quantity minus reserved_quantity) at the targeted location.",
+      "resolution": "Check inventory levels via admin API. Restock the item, adjust reservation cleanup intervals, or enable backorders on the variant."
+    },
+    {
+      "pattern": "Payment authorization failed",
+      "module": "payment",
+      "cause": "The payment provider (Stripe, PayPal) rejected the authorization. Common reasons: insufficient funds, card declined, expired card, 3DS authentication failure.",
+      "resolution": "Check the provider-specific error in the payment session's data field. Return the error to the customer for retry with a different payment method. Check Stripe dashboard for decline codes."
+    },
+    {
+      "pattern": "Payment capture failed",
+      "module": "payment",
+      "cause": "The authorized payment could not be captured. Authorizations expire (7 days for Stripe), the amount may have changed, or the provider returned an error.",
+      "resolution": "Check authorization expiry. If expired, re-authorize. Verify the capture amount matches or is less than authorized. Check provider dashboard for details."
+    },
+    {
+      "pattern": "Webhook signature verification failed",
+      "module": "payment",
+      "cause": "The webhook request from the payment provider has an invalid signature. The webhook secret in environment variables does not match the provider dashboard.",
+      "resolution": "Verify STRIPE_WEBHOOK_SECRET or equivalent env var matches the value in the payment provider's webhook settings. Ensure the raw request body is used for verification (not parsed JSON)."
+    },
+    {
+      "pattern": "JWT token expired",
+      "module": "auth",
+      "cause": "The customer or admin JWT token has exceeded its TTL. Default is typically 24h for access tokens.",
+      "resolution": "Frontend should call POST /auth/token/refresh with the refresh token. If refresh token is also expired, user must re-authenticate."
+    },
+    {
+      "pattern": "Invalid credentials",
+      "module": "auth",
+      "cause": "Email/password combination does not match any registered identity.",
+      "resolution": "Verify the email exists in auth identities. Check password hashing algorithm consistency. If the user forgot their password, use the password reset flow."
+    },
+    {
+      "pattern": "CORS blocked",
+      "module": "auth",
+      "cause": "Browser blocked a cross-origin request from the storefront to the Medusa backend. The storefront origin is not in the allowed CORS list.",
+      "resolution": "Add the storefront URL to store_cors in medusa-config.ts. For admin, update admin_cors. Ensure no trailing slash in the origin URL."
+    },
+    {
+      "pattern": "Product not found",
+      "module": "product",
+      "cause": "The product ID does not exist, the product is in draft status, or the product is not in the requested sales channel.",
+      "resolution": "Verify the product exists and is published. Check sales channel assignment. For store API, products must be published AND in the storefront's sales channel."
+    },
+    {
+      "pattern": "Variant not found",
+      "module": "product",
+      "cause": "The variant ID does not exist or belongs to a product that is not accessible.",
+      "resolution": "Verify the variant ID. Check that the parent product is published and in the correct sales channel."
+    },
+    {
+      "pattern": "Duplicate SKU",
+      "module": "product",
+      "cause": "A product variant is being created or updated with a SKU that already exists on another variant.",
+      "resolution": "SKUs must be globally unique. Change the SKU or update the existing variant."
+    },
+    {
+      "pattern": "No shipping options available",
+      "module": "fulfillment",
+      "cause": "No shipping options match the cart's region, customer address, or cart conditions (weight, total).",
+      "resolution": "Check fulfillment set configuration: verify service zones have geo zones covering the address, shipping options exist for those zones, and option rules (min/max weight, cart total) are satisfied."
+    },
+    {
+      "pattern": "Fulfillment provider error",
+      "module": "fulfillment",
+      "cause": "The external fulfillment provider (FedEx, UPS, etc.) returned an error when creating a fulfillment or generating a shipping label.",
+      "resolution": "Check provider API credentials. Verify the shipping address is valid and complete. Check provider rate limits and API status."
+    },
+    {
+      "pattern": "Order not found",
+      "module": "order",
+      "cause": "The order ID does not exist or the customer does not have access to this order.",
+      "resolution": "Verify the order ID. For store API, ensure the authenticated customer owns the order."
+    },
+    {
+      "pattern": "Cannot cancel fulfilled order",
+      "module": "order",
+      "cause": "The order has fulfillments that have been shipped. Shipped orders cannot be directly canceled.",
+      "resolution": "Process as a return instead of a cancellation. Cancel individual fulfillments first if they haven't shipped."
+    },
+    {
+      "pattern": "Refund exceeds captured amount",
+      "module": "payment",
+      "cause": "The requested refund amount is greater than the total captured amount minus previous refunds.",
+      "resolution": "Check the payment's captured_amount and total already refunded. Issue a partial refund within the available balance."
+    },
+    {
+      "pattern": "Region not found",
+      "module": "region",
+      "cause": "The specified region_id does not exist or is inactive.",
+      "resolution": "Verify the region exists in admin. Check that the region has countries, currency, and providers configured."
+    },
+    {
+      "pattern": "Tax calculation failed",
+      "module": "tax",
+      "cause": "The tax provider returned an error during cart tax calculation. May be a configuration issue, API error, or missing tax region setup.",
+      "resolution": "Check tax provider configuration. Verify tax regions are set up for the cart's shipping address country/province. Check tax provider API connectivity."
+    },
+    {
+      "pattern": "Email delivery failed",
+      "module": "notification",
+      "cause": "The notification provider (SendGrid, SMTP) failed to deliver the email. Reasons: invalid recipient, rate limit, authentication failure.",
+      "resolution": "Check notification provider credentials in env vars. Verify recipient email validity. Check provider dashboard for bounce/error details."
+    },
+    {
+      "pattern": "Template not found",
+      "module": "notification",
+      "cause": "The notification references a template ID that does not exist in the provider (e.g., SendGrid dynamic template).",
+      "resolution": "Create the template in the notification provider. Verify the template ID in the subscriber configuration matches the provider."
+    },
+    {
+      "pattern": "Database connection error",
+      "module": "store",
+      "cause": "The application cannot connect to the PostgreSQL database. Common causes: wrong credentials, database server down, connection pool exhausted.",
+      "resolution": "Verify DATABASE_URL env var. Check database server health and connectivity. Monitor connection pool usage. Increase pool size if needed."
+    },
+    {
+      "pattern": "Redis connection error",
+      "module": "store",
+      "cause": "Cannot connect to Redis for event bus, caching, or session storage.",
+      "resolution": "Verify REDIS_URL env var. Check Redis server health. Verify network access and authentication."
+    },
+    {
+      "pattern": "Workflow step failed",
+      "module": "workflow",
+      "cause": "A step in a workflow (e.g., cart completion, order fulfillment) threw an error. The workflow engine will attempt compensation (rollback) of completed steps.",
+      "resolution": "Check the specific step error. Verify the step's input data. Check that dependent services/modules are healthy. Review workflow compensation logs for rollback status."
+    },
+    {
+      "pattern": "Payment provider not found",
+      "module": "payment",
+      "cause": "The requested payment provider is not registered in the system. The provider plugin may not be installed or configured.",
+      "resolution": "Install the payment provider plugin. Add it to the modules section in medusa-config.ts. Verify environment variables for provider credentials."
+    },
+    {
+      "pattern": "Currency not supported",
+      "module": "currency",
+      "cause": "An operation references a currency code that is not enabled in the store configuration.",
+      "resolution": "Add the currency to the store's supported currencies via admin API or medusa-config.ts."
+    },
+    {
+      "pattern": "Sales channel not found",
+      "module": "sales-channel",
+      "cause": "The referenced sales channel ID does not exist or is disabled.",
+      "resolution": "Verify the sales channel exists and is active. Check the publishable API key's sales channel assignment."
+    },
+    {
+      "pattern": "API key invalid or expired",
+      "module": "api-key",
+      "cause": "The publishable or secret API key is revoked, expired, or does not exist.",
+      "resolution": "Generate a new API key. Update the storefront or integration with the new key. Check key type (publishable vs secret) matches the use case."
+    },
+    {
+      "pattern": "Out of memory",
+      "module": "store",
+      "cause": "Node.js process exceeded memory limits. May be caused by large batch operations, memory leaks, or insufficient container resources.",
+      "resolution": "Increase Node.js max-old-space-size. Check for memory leaks (unclosed connections, growing caches). Break large batch operations into smaller chunks."
+    },
+    {
+      "pattern": "Request timeout",
+      "module": "store",
+      "cause": "An API request exceeded the timeout threshold. Common causes: slow database queries, external provider timeouts, large response payloads.",
+      "resolution": "Check database query performance. Add indexes for slow queries. Increase timeout limits if the operation legitimately takes long. Implement pagination for large result sets."
+    },
+    {
+      "pattern": "Promotion code not valid",
+      "module": "promotion",
+      "cause": "The promotion code is expired, has reached its usage limit, does not meet the cart conditions (min total, specific products), or does not exist.",
+      "resolution": "Verify the promotion exists and is active. Check validity dates, usage limits, and application rules (buy rules, target rules, budget)."
+    }
+  ]
+}
