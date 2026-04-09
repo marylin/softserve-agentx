@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { Shield } from "lucide-react";
+import IncidentForm from "./components/IncidentForm";
+import IncidentList from "./components/IncidentList";
+import StatusTracker from "./components/StatusTracker";
 
 type View = "form" | "list" | "detail";
 
@@ -43,13 +46,26 @@ export default function App() {
       </header>
       <main className="max-w-5xl mx-auto p-6">
         {view === "form" && (
-          <p className="text-gray-400">Incident form -- loading...</p>
+          <IncidentForm
+            onSubmitted={(id) => {
+              setSelectedId(id);
+              setView("detail");
+            }}
+          />
         )}
         {view === "list" && (
-          <p className="text-gray-400">Incident list -- loading...</p>
+          <IncidentList
+            onSelect={(id) => {
+              setSelectedId(id);
+              setView("detail");
+            }}
+          />
         )}
         {view === "detail" && selectedId && (
-          <p className="text-gray-400">Incident detail -- loading...</p>
+          <StatusTracker
+            incidentId={selectedId}
+            onBack={() => setView("list")}
+          />
         )}
       </main>
     </div>
