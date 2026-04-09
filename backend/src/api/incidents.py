@@ -106,6 +106,30 @@ async def create_incident(
     return {"id": str(incident.id), "status": incident.status}
 
 
+@router.post("/suggest")
+async def suggest_description(title: str = Form(""), affected_area: str = Form("")):
+    """Use Claude to suggest a structured incident description."""
+    if not title:
+        raise HTTPException(status_code=400, detail="Title is required")
+
+    import anthropic
+
+    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+
+    area_context = f" in the {affected_area} area" if affected_area else ""
+
+    response = client.messages.create(
+        model=settings.llm_model,
+        max_tokens=500,
+        messages=[{
+            "role": "user",
+            "content": f"Generate a concise, structured incident report for an e-commerce platform issue. Title: '{title}'{area_context}.\n\nUse this format exactly:\n\n**What happened:**\n[1-2 sentences]\n\n**Steps to reproduce:**\n1. [step]\n2. [step]\n3. [step]\n\n**Expected behavior:**\n[1 sentence]\n\n**Actual behavior:**\n[1 sentence]\n\n**Error messages (if any):**\n[any error text or 'None observed']\n\nBe specific and technical. Do not add any other sections."
+        }]
+    )
+
+    return {"suggestion": response.content[0].text}
+
+
 @router.get("/", response_model=list[IncidentListItem])
 async def list_incidents(db: AsyncSession = Depends(get_db)):
     result = await db.execute(

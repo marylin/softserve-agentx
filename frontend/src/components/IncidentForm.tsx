@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
-import { Paperclip, X, Loader2, AlertCircle } from "lucide-react";
-import { createIncident } from "../lib/api";
+import { Paperclip, X, Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { createIncident, suggestDescription } from "../lib/api";
 import ScreenRecorder from "./ScreenRecorder";
 
 interface Props {
@@ -15,8 +15,20 @@ export default function IncidentForm({ onSubmitted }: Props) {
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSuggest = async () => {
+    setSuggesting(true);
+    try {
+      const suggestion = await suggestDescription(title, affectedArea);
+      setDescription(suggestion);
+    } catch {
+      /* ignore */
+    }
+    setSuggesting(false);
+  };
 
   const addFiles = (newFiles: FileList | File[]) => {
     setFiles((prev) => [...prev, ...Array.from(newFiles)]);
@@ -136,9 +148,24 @@ export default function IncidentForm({ onSubmitted }: Props) {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-300">
-          Description
-        </label>
+        <div className="mb-1 flex items-center justify-between">
+          <label className="block text-sm font-medium text-gray-300">
+            Description
+          </label>
+          <button
+            type="button"
+            onClick={handleSuggest}
+            disabled={!title || suggesting}
+            className="text-sm text-orange-400 hover:text-orange-300 disabled:text-gray-600 flex items-center gap-1"
+          >
+            {suggesting ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Sparkles className="w-3 h-3" />
+            )}
+            {suggesting ? "Writing..." : "AI Suggest"}
+          </button>
+        </div>
         <textarea
           required
           maxLength={5000}

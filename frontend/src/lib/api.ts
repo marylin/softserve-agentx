@@ -25,6 +25,22 @@ export async function createIncident(
   return res.json();
 }
 
+export async function suggestDescription(
+  title: string,
+  affectedArea: string
+): Promise<string> {
+  const form = new FormData();
+  form.append("title", title);
+  form.append("affected_area", affectedArea);
+  const res = await fetch(`${API_URL}/incidents/suggest`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) throw new Error("Failed to get suggestion");
+  const data = await res.json();
+  return data.suggestion;
+}
+
 export async function getIncident(id: string) {
   const res = await fetch(`${API_URL}/incidents/${id}`);
   if (!res.ok) throw new Error(`Failed to get incident: ${res.statusText}`);
