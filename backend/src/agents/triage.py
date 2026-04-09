@@ -34,7 +34,7 @@ Output a JSON object:
     "summary": "Technical summary of the issue and likely root cause",
     "affected_modules": ["module1", "module2"],
     "code_references": [
-        {"file": "path/to/file.ts", "line": 42, "context": "relevant code snippet"}
+        {"file": "path/to/file.ts", "line": 42, "description": "relevant code snippet"}
     ],
     "runbook_steps": [
         "Step 1: ...",

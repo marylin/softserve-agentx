@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import hmac
 from datetime import datetime, timezone
@@ -71,21 +72,27 @@ async def linear_webhook(
         routing.resolved_at = datetime.now(timezone.utc)
         routing.resolution_notified = True
 
-        from src.agents.tools.email_tool import send_email
-        send_email(
-            to=incident.reporter_email,
-            subject=f"[Resolved] {incident.title}",
-            html_body=f"""
-            <h2>Your incident has been resolved</h2>
-            <p><strong>{incident.title}</strong> has been marked as resolved.</p>
-            <p>Ticket: <a href="{routing.linear_ticket_url}">{routing.linear_ticket_id}</a></p>
-            <p>Thank you for reporting this issue.</p>
-            <hr>
-            <p><small>AgentX SRE Triage System</small></p>
-            """,
-        )
-
+        # Commit DB state FIRST, then attempt email (email failure should not lose state)
         await db.commit()
         log.info("resolution_complete", incident_id=str(incident.id), ticket_id=issue_id)
+
+        # Send resolution email in thread to avoid blocking event loop
+        from src.agents.tools.email_tool import send_email
+        try:
+            await asyncio.to_thread(
+                send_email,
+                to=incident.reporter_email,
+                subject=f"[Resolved] {incident.title}",
+                html_body=f"""
+                <h2>Your incident has been resolved</h2>
+                <p><strong>{incident.title}</strong> has been marked as resolved.</p>
+                <p>Ticket: <a href="{routing.linear_ticket_url}">{routing.linear_ticket_id}</a></p>
+                <p>Thank you for reporting this issue.</p>
+                <hr>
+                <p><small>AgentX SRE Triage System</small></p>
+                """,
+            )
+        except Exception as e:
+            log.error("resolution_email_failed", error=str(e), incident_id=str(incident.id))
 
     return {"status": "resolved"}

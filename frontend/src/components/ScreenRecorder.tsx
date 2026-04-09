@@ -33,7 +33,13 @@ export default function ScreenRecorder({ onRecorded }: Props) {
     return cleanup;
   }, [cleanup]);
 
+  const isSupported =
+    typeof navigator !== "undefined" &&
+    !!navigator.mediaDevices?.getDisplayMedia &&
+    typeof MediaRecorder !== "undefined";
+
   const start = async () => {
+    if (!isSupported) return;
     chunksRef.current = [];
     let stream: MediaStream;
     try {
@@ -42,7 +48,7 @@ export default function ScreenRecorder({ onRecorded }: Props) {
         audio: false,
       });
     } catch {
-      // user cancelled the picker
+      // user cancelled the picker or API unavailable
       return;
     }
 
@@ -92,6 +98,8 @@ export default function ScreenRecorder({ onRecorded }: Props) {
 
   const fmt = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+  if (!isSupported) return null;
 
   return recording ? (
     <button

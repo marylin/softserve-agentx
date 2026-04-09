@@ -107,7 +107,7 @@ class TriageResult(BaseModel):
 
 
 class RoutingResult(BaseModel):
-    linear_ticket_id: str
-    linear_ticket_url: str
+    linear_ticket_id: str | None = None
+    linear_ticket_url: str | None = None
     slack_message_ts: str | None = None
-    email_sent: bool
+    email_sent: bool = False

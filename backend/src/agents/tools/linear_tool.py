@@ -12,9 +12,9 @@ SEVERITY_PRIORITY = {"P1": 1, "P2": 2, "P3": 3, "P4": 4}
 
 def create_linear_ticket(title: str, description: str, severity: str) -> str:
     """Create a Linear issue via GraphQL API."""
-    if not settings.linear_api_key:
-        log.info("linear_skipped", reason="API key not configured")
-        return json.dumps({"status": "skipped", "reason": "Linear API key not configured"})
+    if not settings.linear_api_key or not settings.linear_team_id:
+        log.info("linear_skipped", reason="Linear API key or team ID not configured")
+        return json.dumps({"status": "skipped", "reason": "Linear API key or team ID not configured"})
 
     priority = SEVERITY_PRIORITY.get(severity, 3)
 

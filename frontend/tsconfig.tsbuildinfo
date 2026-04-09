@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/incidentform.tsx","./src/components/incidentlist.tsx","./src/components/screenrecorder.tsx","./src/components/severitybadge.tsx","./src/components/statustracker.tsx","./src/lib/api.ts","./src/types/incident.ts"],"version":"5.7.3"}

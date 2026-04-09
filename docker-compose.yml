@@ -43,6 +43,12 @@ services:
       - KNOWLEDGE_BASE_PATH=/app/knowledge-base
     volumes:
       - uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,6 +68,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+      start_period: 10s
 
   # Langfuse self-hosted (optional -- use Langfuse Cloud by default)
   # Activate with: docker compose --profile self-hosted up --build

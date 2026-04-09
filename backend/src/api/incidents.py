@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload
 from src.db.database import async_session, get_db
 from src.config import settings
 from src.models.incident import Incident, IncidentAttachment
+from src.security.validation import validate_text_input, validate_file
 from src.models.schemas import (
     AttachmentResponse,
     IncidentListItem,
@@ -40,6 +41,21 @@ async def create_incident(
     files: list[UploadFile] = File(default=[]),
     db: AsyncSession = Depends(get_db),
 ):
+    # Validate text inputs
+    valid, err = validate_text_input(title)
+    if not valid:
+        raise HTTPException(status_code=400, detail=f"Invalid title: {err}")
+    valid, err = validate_text_input(description)
+    if not valid:
+        raise HTTPException(status_code=400, detail=f"Invalid description: {err}")
+
+    # Validate uploaded files
+    for f in files:
+        if f.filename and f.size:
+            valid, err = validate_file(f.filename, f.content_type or "", f.size)
+            if not valid:
+                raise HTTPException(status_code=400, detail=f"Invalid file '{f.filename}': {err}")
+
     incident = Incident(
         title=title,
         description=description,

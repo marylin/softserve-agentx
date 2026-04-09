@@ -48,8 +48,12 @@ def run_agent(
 
     max_retries = 3
     backoff_times = [1, 2, 4]
+    max_iterations = 30
+    iteration = 0
+    text_parts = []
 
-    while True:
+    while iteration < max_iterations:
+        iteration += 1
         # --- API call with retry ---
         response = None
         for attempt in range(max_retries):
@@ -172,3 +176,7 @@ def run_agent(
         # Append assistant message + tool results and loop
         messages.append({"role": "assistant", "content": response.content})
         messages.append({"role": "user", "content": tool_results})
+
+    # Exhausted max iterations -- return whatever text we have
+    log.warning("agent_max_iterations", agent=name, iterations=max_iterations)
+    return "\n".join(text_parts) if text_parts else '{"error": "Agent exceeded maximum iterations"}'
