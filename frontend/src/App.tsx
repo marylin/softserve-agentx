@@ -68,8 +68,8 @@ export default function App() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Shield className="w-6 h-6 text-indigo-500" />
-            <h1 className="text-xl font-semibold text-gray-100">
-              AgentX SRE Triage
+            <h1 className="text-lg font-semibold tracking-tight text-gray-100">
+              AgentX <span className="font-normal text-gray-400">SRE Triage</span>
             </h1>
           </div>
           <nav className="flex gap-4">
