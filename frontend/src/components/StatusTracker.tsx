@@ -206,7 +206,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                   className={`hidden sm:block h-px w-6 ${done ? "bg-indigo-500" : "bg-gray-700"}`}
                 />
               )}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 transition-all duration-200">
                 {failed && i === 0 ? (
                   <XCircle className="w-5 h-5 text-red-500" />
                 ) : done ? (
@@ -263,7 +263,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
       {/* Triage Results */}
       {incident.triage && (
-        <section className="space-y-4 rounded border border-gray-800 bg-gray-900 p-5">
+        <section className="animate-slide-up space-y-4 rounded border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
             <FileText className="w-4 h-4 text-indigo-500" />
             Triage Results
@@ -357,7 +357,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
       {/* Similar Incidents */}
       {similarIncidents.length > 0 && (
-        <section className="space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
+        <section className="animate-slide-up space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
             <Link2 className="w-4 h-4 text-indigo-500" />
             Related Incidents
@@ -389,7 +389,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
       {/* Routing Results */}
       {incident.routing && (
-        <section className="space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
+        <section className="animate-slide-up space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
             <ExternalLink className="w-4 h-4 text-indigo-500" />
             Notifications & Ticket
@@ -458,7 +458,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
         };
 
         return (
-          <section className="space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
+          <section className="animate-slide-up space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
               <Clock className="w-4 h-4 text-indigo-500" />
               Timeline

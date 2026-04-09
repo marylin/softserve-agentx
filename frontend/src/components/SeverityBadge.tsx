@@ -35,7 +35,7 @@ export default function SeverityBadge({ level }: { level: SeverityLevel }) {
   return (
     <span
       title={SLA_TOOLTIPS[level] || ""}
-      className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium ${classes}`}
+      className={`animate-badge inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium ${classes}`}
     >
       {level} {label}
     </span>

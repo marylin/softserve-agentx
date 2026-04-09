@@ -116,7 +116,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
   };
 
   const inputClasses =
-    "w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors";
+    "w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors transition-shadow duration-150";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -185,7 +185,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
           id="affected-area"
           value={affectedArea}
           onChange={(e) => setAffectedArea(e.target.value)}
-          className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+          className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors transition-shadow duration-150"
         >
           <option value="">Select affected area...</option>
           {areas.map(area => (

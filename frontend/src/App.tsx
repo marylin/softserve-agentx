@@ -140,34 +140,36 @@ export default function App() {
           </nav>
         </div>
       </header>
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        {view === "form" && (
-          <IncidentForm
-            onSubmitted={(id) => navigate("detail", id)}
-          />
-        )}
-        {view === "list" && (
-          <IncidentList
-            onSelect={(id) => navigate("detail", id)}
-            onReportNew={() => navigate("form")}
-          />
-        )}
-        {view === "metrics" && <MetricsDashboard />}
-        {view === "health" && (
-          <ComponentHealth
-            onSelectComponent={(area) => {
-              navigate("list");
-              window.history.replaceState({}, "", `/incidents?area=${encodeURIComponent(area)}`);
-              window.dispatchEvent(new CustomEvent("filter-area", { detail: area }));
-            }}
-          />
-        )}
-        {view === "detail" && selectedId && (
-          <StatusTracker
-            incidentId={selectedId}
-            onBack={() => navigate("list")}
-          />
-        )}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6" key={view}>
+        <div className="animate-fade-in">
+          {view === "form" && (
+            <IncidentForm
+              onSubmitted={(id) => navigate("detail", id)}
+            />
+          )}
+          {view === "list" && (
+            <IncidentList
+              onSelect={(id) => navigate("detail", id)}
+              onReportNew={() => navigate("form")}
+            />
+          )}
+          {view === "metrics" && <MetricsDashboard />}
+          {view === "health" && (
+            <ComponentHealth
+              onSelectComponent={(area) => {
+                navigate("list");
+                window.history.replaceState({}, "", `/incidents?area=${encodeURIComponent(area)}`);
+                window.dispatchEvent(new CustomEvent("filter-area", { detail: area }));
+              }}
+            />
+          )}
+          {view === "detail" && selectedId && (
+            <StatusTracker
+              incidentId={selectedId}
+              onBack={() => navigate("list")}
+            />
+          )}
+        </div>
       </main>
     </div>
   );
