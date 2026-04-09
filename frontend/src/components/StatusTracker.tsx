@@ -46,9 +46,9 @@ function SlaCountdown({ severity, createdAt }: { severity: string; createdAt: st
     return () => clearInterval(id);
   }, []);
 
+  // `now` state triggers re-renders; getSlaStatus uses Date.now() internally
+  void now;
   const { remaining, breached } = getSlaStatus(severity, createdAt);
-  // Force recalc with current time
-  const _ = now;
 
   return (
     <span
