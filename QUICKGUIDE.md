@@ -48,6 +48,7 @@ This is the only key needed to run the core pipeline. All integrations below are
 |-----|----------------|
 | `LINEAR_API_KEY` | [Linear > Settings > API](https://linear.app/settings/api) -- create a personal API key |
 | `LINEAR_TEAM_ID` | Linear > Settings > Teams > click your team > copy the ID from the URL |
+| `LINEAR_DEFAULT_ASSIGNEE_ID` | Linear > Settings > Members > click a user > copy ID from URL. P1/P2 tickets will be auto-assigned to this user. |
 
 ### Optional: Notifications (Slack)
 
@@ -108,7 +109,12 @@ Wait for the health checks to pass. You should see log output from all three ser
 
 Navigate to **http://localhost:5173** in your browser.
 
-You will see the incident dashboard with a form to report new incidents and a table of existing incidents.
+You will see the incident form. The navigation bar has five views:
+- **Report Incident** -- submit new incidents with AI-assisted descriptions, voice input, and component picker
+- **Incidents** -- searchable/filterable list with SLA breach highlighting and JSON export
+- **Metrics** -- KPI cards and distribution charts (severity, status, components)
+- **Health** -- per-component health grid derived from open incidents
+- **API** -- link to the FastAPI interactive docs
 
 ---
 
@@ -117,7 +123,8 @@ You will see the incident dashboard with a form to report new incidents and a ta
 1. Fill in the **Report an Incident** form:
    - Your name and email
    - A title like "Payment processing fails with 500 error"
-   - A description with details about the issue
+   - Select an **Affected Area** from the component picker (recommended -- enables component health tracking)
+   - For the description, try clicking **AI Suggest** to auto-generate a structured report, or use the **Voice** button to dictate
    - Optionally attach a screenshot or click "Record Screen" to capture a short recording
 
 2. Click **Submit Incident**.
@@ -129,11 +136,15 @@ You will see the incident dashboard with a form to report new incidents and a ta
    - **Routed** -- the Router Agent has created tickets and sent notifications
 
 4. Once complete, you will see:
-   - Severity badge (P1-P4) with confidence percentage
+   - Severity badge (P1-P4) with confidence percentage and confidence label (High/Moderate/Low)
+   - Live SLA countdown timer
    - Technical summary of the issue
    - Affected modules
    - Code references with file paths
    - Runbook steps
+   - Related incidents (by shared modules)
+   - Incident timeline with step durations
+   - Estimated triage cost
    - Links to the Linear ticket (if configured)
    - Notification status for Slack and email
 
@@ -221,3 +232,17 @@ To completely reset the database and start fresh:
 docker compose down -v    # removes volumes (all data)
 docker compose up --build
 ```
+
+---
+
+## 11. Customizing Agent Behavior
+
+Edit `backend/agent-config.yaml` to customize without code changes:
+
+- **Severity criteria** -- define what qualifies as P1/P2/P3/P4 for your team
+- **SLA thresholds** -- set response time targets per severity level (used by the auto-escalation task)
+- **Notification routing** -- control which severity levels trigger Slack critical channel, auto-assignment, and team email
+- **Affected areas** -- customize the component picker dropdown in the incident form
+- **Agent limits** -- adjust max tool calls, file read limits, and video frame extraction
+
+After editing, restart the backend: `docker compose restart backend`
