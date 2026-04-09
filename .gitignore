@@ -40,6 +40,9 @@ Desktop.ini
 # === Docker ===
 *.log
 
+# === Internal docs (specs, plans, contest context -- not for submission) ===
+docs/
+
 # === Project-specific ===
 # Uploaded incident files (runtime)
 uploads/
