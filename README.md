@@ -1,5 +1,7 @@
 # AgentX SRE Triage Agent
 
+[![CI - Build & Test](https://github.com/marylin/softserve-agentx/actions/workflows/ci.yml/badge.svg)](https://github.com/marylin/softserve-agentx/actions/workflows/ci.yml)
+
 Manual SRE triage takes 15-30 minutes on average -- reading the report, searching the codebase, classifying severity, filing a ticket, and pinging the right team. AgentX reduces this to under 30 seconds. From incident report to triaged Linear ticket with severity classification, codebase analysis, runbook steps, and team notifications across Slack and email -- fully autonomous, no human in the loop.
 
 ## Key Metrics
