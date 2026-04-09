@@ -54,7 +54,7 @@ function SlaCountdown({ severity, createdAt }: { severity: string; createdAt: st
   return (
     <span
       className={`inline-flex items-center gap-1 text-xs font-medium ${
-        breached ? "text-red-400 animate-pulse" : "text-green-400"
+        breached ? "text-red-400 font-semibold" : "text-green-400"
       }`}
     >
       <Clock className="w-3 h-3" />
