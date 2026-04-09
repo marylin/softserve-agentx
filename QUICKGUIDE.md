@@ -51,6 +51,8 @@ This is the only key needed to run the core pipeline. All integrations below are
 
 ### Optional: Notifications (Slack)
 
+Join the demo Slack workspace: https://join.slack.com/t/ss-agentx/shared_invite/zt-3uykoe9oh-Y~eBDCd8QPs3Y6ipjaSFQw
+
 | Key | Where to get it |
 |-----|----------------|
 | `SLACK_WEBHOOK_CRITICAL` | [Slack API > Incoming Webhooks](https://api.slack.com/messaging/webhooks) -- create an app, enable incoming webhooks, add a webhook for your critical alerts channel |

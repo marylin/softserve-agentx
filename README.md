@@ -147,6 +147,12 @@ See demo video.
 
 6. **Track** -- The frontend polls the incident status every 3 seconds and renders a live progress tracker. Once the pipeline completes, the user sees severity, confidence, affected modules, code references, runbook steps, the Linear ticket link, and notification confirmations.
 
+## Live Demo
+
+- **Frontend:** https://ssagentx.up.railway.app
+- **Backend API:** https://ssagentx-b.up.railway.app
+- **Slack workspace:** [Join ss-agentx](https://join.slack.com/t/ss-agentx/shared_invite/zt-3uykoe9oh-Y~eBDCd8QPs3Y6ipjaSFQw)
+
 ## Related Documentation
 
 - [AGENTS_USE.md](AGENTS_USE.md) -- Detailed agent documentation (hackathon submission format)
