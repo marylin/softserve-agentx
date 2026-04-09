@@ -130,6 +130,19 @@ async def suggest_description(title: str = Form(""), affected_area: str = Form("
     return {"suggestion": response.content[0].text}
 
 
+@router.get("/config/areas")
+async def get_affected_areas():
+    from src.agent_config import get_agent_config
+    config = get_agent_config()
+    areas = config.get("affected_areas", [
+        "Cart & Checkout", "Payment Processing", "Product Catalog & Search",
+        "Order Management", "Customer Accounts & Auth", "Inventory & Stock",
+        "Fulfillment & Shipping", "Promotions & Discounts", "Admin Dashboard",
+        "Storefront (General)", "API / Integrations", "Other"
+    ])
+    return {"areas": areas}
+
+
 @router.get("/", response_model=list[IncidentListItem])
 async def list_incidents(db: AsyncSession = Depends(get_db)):
     result = await db.execute(

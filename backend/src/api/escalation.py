@@ -3,18 +3,21 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 
+from src.agent_config import get_agent_config
 from src.db.database import async_session
 from src.models.incident import Incident, TriageResultModel
 from src.observability.logging import get_logger
 
 log = get_logger("escalation")
 
-SLA_MINUTES = {"P1": 15, "P2": 60, "P3": 240, "P4": 1440}
 ESCALATION_MAP = {"P4": "P3", "P3": "P2", "P2": "P1"}
 
 
 async def check_escalations():
     """Check for SLA breaches and escalate severity."""
+    config = get_agent_config()
+    sla_config = config.get("sla_minutes", {})
+    SLA_MINUTES = {k: int(v) for k, v in sla_config.items()} if sla_config else {"P1": 15, "P2": 60, "P3": 240, "P4": 1440}
     async with async_session() as db:
         result = await db.execute(
             select(Incident, TriageResultModel)

@@ -1,6 +1,7 @@
 import json
 import re
 
+from src.agent_config import get_agent_config
 from src.agents.base import run_agent
 from src.agents.tools.codebase import CODEBASE_TOOL_HANDLERS, CODEBASE_TOOLS
 from src.models.schemas import IntakeResult, SeverityLevel, TriageResult
@@ -13,10 +14,7 @@ SYSTEM_PROMPT = """You are an SRE Triage Agent. You analyze incident reports and
 affected modules, and recommended actions.
 
 SEVERITY CRITERIA:
-- P1 (Critical): Production down, data loss, security breach, all users affected. Immediate response required.
-- P2 (High): Major feature broken, significant performance degradation, partial outage. Response within 1 hour.
-- P3 (Medium): Non-critical feature broken, workaround available, limited user impact. Response within 4 hours.
-- P4 (Low): Minor issue, cosmetic, documentation, low-priority enhancement. Response within 24 hours.
+{SEVERITY_CRITERIA}
 
 ANALYSIS STRATEGY:
 1. Search for relevant modules and documentation
@@ -50,6 +48,23 @@ def run_triage_agent(
     trace_span=None,
 ) -> TriageResult:
     """Run the triage agent to assess severity and identify affected modules."""
+    config = get_agent_config()
+    severity_config = config.get("severity_criteria", {})
+
+    if severity_config:
+        criteria = ""
+        for level, desc in severity_config.items():
+            criteria += f"- {level}: {desc}\n"
+    else:
+        criteria = (
+            "- P1 (Critical): Production down, data loss, security breach, all users affected. Immediate response required.\n"
+            "- P2 (High): Major feature broken, significant performance degradation, partial outage. Response within 1 hour.\n"
+            "- P3 (Medium): Non-critical feature broken, workaround available, limited user impact. Response within 4 hours.\n"
+            "- P4 (Low): Minor issue, cosmetic, documentation, low-priority enhancement. Response within 24 hours."
+        )
+
+    system_prompt = SYSTEM_PROMPT.replace("{SEVERITY_CRITERIA}", criteria)
+
     # Build user message with wrapped content
     details_str = json.dumps(intake_result.extracted_details, indent=2)
 
@@ -68,7 +83,7 @@ def run_triage_agent(
 
     raw = run_agent(
         name="triage",
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=system_prompt,
         user_message=message,
         tools=CODEBASE_TOOLS,
         tool_handlers=CODEBASE_TOOL_HANDLERS,

@@ -1,0 +1,66 @@
+# AgentX SRE Triage Agent Configuration
+# Teams can customize agent behavior by editing this file.
+
+# Severity classification criteria
+severity_criteria:
+  P1: "Production down, data loss, security breach, all users affected"
+  P2: "Major feature broken, significant degradation, partial outage"
+  P3: "Non-critical feature degraded, workaround available, limited impact"
+  P4: "Cosmetic issue, minor UX, enhancement request"
+
+# SLA response times (minutes)
+sla_minutes:
+  P1: 15
+  P2: 60
+  P3: 240
+  P4: 1440
+
+# Notification routing
+routing:
+  P1_slack_channel: critical
+  P2_P4_slack_channel: general
+  auto_assign_severity:
+    - P1
+    - P2
+  email_team_on_severity:
+    - P1
+
+# Affected areas (shown in incident form dropdown)
+affected_areas:
+  - Cart & Checkout
+  - Payment Processing
+  - Product Catalog & Search
+  - Order Management
+  - Customer Accounts & Auth
+  - Inventory & Stock
+  - Fulfillment & Shipping
+  - Promotions & Discounts
+  - Admin Dashboard
+  - Storefront (General)
+  - API / Integrations
+  - Other
+
+# Agent tool limits
+agent_settings:
+  max_tool_calls: 20
+  max_iterations: 30
+  max_file_read_lines: 500
+  max_log_lines: 200
+  max_video_frames: 10
+
+# Triage agent codebase context
+codebase:
+  name: "Medusa.js"
+  version: "v2"
+  description: "Node.js e-commerce framework"
+  knowledge_base_modules:
+    - cart
+    - order
+    - payment
+    - product
+    - customer
+    - fulfillment
+    - inventory
+    - pricing
+    - auth
+    - notification

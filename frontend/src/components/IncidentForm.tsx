@@ -1,10 +1,19 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Paperclip, X, Loader2, AlertCircle, Sparkles, Mic } from "lucide-react";
 import { createIncident, suggestDescription } from "../lib/api";
 import ScreenRecorder from "./ScreenRecorder";
 
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 const speechSupported = !!SpeechRecognition;
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const DEFAULT_AREAS = [
+  "Cart & Checkout", "Payment Processing", "Product Catalog & Search",
+  "Order Management", "Customer Accounts & Auth", "Inventory & Stock",
+  "Fulfillment & Shipping", "Promotions & Discounts", "Admin Dashboard",
+  "Storefront (General)", "API / Integrations", "Other"
+];
 
 interface Props {
   onSubmitted: (id: string) => void;
@@ -20,9 +29,17 @@ export default function IncidentForm({ onSubmitted }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [listening, setListening] = useState(false);
+  const [areas, setAreas] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/incidents/config/areas`)
+      .then(r => r.json())
+      .then(d => setAreas(d.areas))
+      .catch(() => setAreas(DEFAULT_AREAS));
+  }, []);
 
   const handleSuggest = async () => {
     setSuggesting(true);
@@ -159,18 +176,9 @@ export default function IncidentForm({ onSubmitted }: Props) {
           className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
           <option value="">Select affected area...</option>
-          <option>Cart &amp; Checkout</option>
-          <option>Payment Processing</option>
-          <option>Product Catalog &amp; Search</option>
-          <option>Order Management</option>
-          <option>Customer Accounts &amp; Auth</option>
-          <option>Inventory &amp; Stock</option>
-          <option>Fulfillment &amp; Shipping</option>
-          <option>Promotions &amp; Discounts</option>
-          <option>Admin Dashboard</option>
-          <option>Storefront (General)</option>
-          <option>API / Integrations</option>
-          <option>Other</option>
+          {areas.map(area => (
+            <option key={area} value={area}>{area}</option>
+          ))}
         </select>
       </div>
 
