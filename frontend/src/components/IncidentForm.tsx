@@ -199,6 +199,8 @@ export default function IncidentForm({ onSubmitted }: Props) {
               <button
                 type="button"
                 onClick={handleVoice}
+                aria-label={listening ? "Stop voice recording" : "Start voice input"}
+                aria-pressed={listening}
                 className={`text-sm flex items-center gap-1 ${listening ? "text-red-400" : "text-indigo-400 hover:text-indigo-300"}`}
               >
                 <Mic className="w-3 h-3" aria-hidden="true" />

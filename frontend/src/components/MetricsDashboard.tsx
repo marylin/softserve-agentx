@@ -96,43 +96,28 @@ export default function MetricsDashboard() {
     <div className="space-y-8">
       <h2 className="text-lg font-semibold text-gray-100">Metrics</h2>
 
-      {/* KPI Stats Bar */}
-      <div className="flex items-center gap-6 bg-gray-900 rounded-lg border border-gray-800 px-5 py-4">
-        <Tooltip text="Total incidents across all statuses">
-          <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Total Incidents</p>
-            <p className="text-lg font-semibold text-gray-100">
-              {metrics.total_incidents}
-            </p>
-          </div>
-        </Tooltip>
-        <div className="w-px h-8 bg-gray-800" />
-        <Tooltip text="Average AI confidence score across all triaged incidents (higher = more reliable severity)">
-          <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Avg Confidence</p>
-            <p className="text-lg font-semibold text-gray-100">
-              {(metrics.average_confidence * 100).toFixed(1)}%
-            </p>
-          </div>
-        </Tooltip>
-        <div className="w-px h-8 bg-gray-800" />
-        <Tooltip text="Percentage of incidents that reached resolved status">
-          <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Resolution Rate</p>
-            <p className="text-lg font-semibold text-gray-100">
-              {(metrics.resolution_rate * 100).toFixed(1)}%
-            </p>
-          </div>
-        </Tooltip>
-        <div className="w-px h-8 bg-gray-800" />
-        <Tooltip text="Percentage of incidents where the triage pipeline failed">
-          <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Failure Rate</p>
-            <p className="text-lg font-semibold text-gray-100">
-              {(metrics.failure_rate * 100).toFixed(1)}%
-            </p>
-          </div>
-        </Tooltip>
+      {/* Inline Summary */}
+      <div className="rounded-lg border border-gray-800 bg-gray-900 px-5 py-4">
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+          <Tooltip text="Total incidents across all statuses">
+            <span className="text-2xl font-semibold text-gray-100">{metrics.total_incidents}</span>
+            <span className="ml-1.5 text-sm text-gray-400">incidents</span>
+          </Tooltip>
+          <Tooltip text="Average AI confidence score (higher = more reliable severity)">
+            <span className="text-sm text-gray-400">Confidence</span>
+            <span className="ml-1.5 text-sm font-medium text-gray-200">{(metrics.average_confidence * 100).toFixed(0)}%</span>
+          </Tooltip>
+          <Tooltip text="Percentage of incidents that reached resolved status">
+            <span className="text-sm text-gray-400">Resolved</span>
+            <span className="ml-1.5 text-sm font-medium text-gray-200">{(metrics.resolution_rate * 100).toFixed(0)}%</span>
+          </Tooltip>
+          {metrics.failure_rate > 0 && (
+            <Tooltip text="Percentage of incidents where triage failed">
+              <span className="text-sm text-gray-400">Failed</span>
+              <span className="ml-1.5 text-sm font-medium text-red-400">{(metrics.failure_rate * 100).toFixed(0)}%</span>
+            </Tooltip>
+          )}
+        </div>
       </div>
 
       {/* Severity Distribution */}

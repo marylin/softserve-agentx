@@ -105,6 +105,7 @@ export default function ScreenRecorder({ onRecorded }: Props) {
     <button
       type="button"
       onClick={stop}
+      aria-label={"Stop recording, " + fmt(elapsed) + " elapsed"}
       className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/20 transition-colors"
     >
       <Square className="w-4 h-4" />
@@ -114,6 +115,7 @@ export default function ScreenRecorder({ onRecorded }: Props) {
     <button
       type="button"
       onClick={start}
+      aria-label="Record screen"
       className="flex items-center gap-2 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
     >
       <Video className="w-4 h-4" />

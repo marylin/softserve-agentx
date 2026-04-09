@@ -359,11 +359,11 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
             <Link2 className="w-4 h-4 text-indigo-500" />
             Related Incidents
           </h3>
-          <ul className="space-y-2">
+          <ul className="divide-y divide-gray-800">
             {similarIncidents.map((sim) => (
               <li
                 key={sim.id}
-                className="flex flex-wrap items-center gap-2 rounded bg-gray-800/60 px-3 py-2"
+                className="flex flex-wrap items-center gap-2 py-3"
               >
                 <span className="text-sm text-gray-200 font-medium">{sim.title}</span>
                 <SeverityBadge level={sim.severity as "P1" | "P2" | "P3" | "P4"} />
