@@ -311,6 +311,67 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
         </section>
       )}
 
+      {/* Timeline */}
+      {(() => {
+        const entries: { label: string; time: string | null; color: string }[] = [
+          { label: "Received", time: incident.created_at, color: "bg-gray-500" },
+          { label: "Triaging", time: incident.created_at, color: "bg-yellow-500" },
+          { label: "Triaged", time: incident.triage?.created_at ?? null, color: "bg-blue-500" },
+          { label: "Routed", time: incident.routing?.created_at ?? null, color: "bg-orange-500" },
+          { label: "Resolved", time: incident.routing?.resolved_at ?? null, color: "bg-green-500" },
+        ];
+        const active = entries.filter((e) => e.time !== null);
+        if (active.length < 2) return null;
+
+        const fmt = (iso: string) =>
+          new Date(iso).toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          });
+
+        const durationBetween = (a: string, b: string) => {
+          const ms = new Date(b).getTime() - new Date(a).getTime();
+          if (ms < 0) return null;
+          const totalSec = Math.floor(ms / 1000);
+          if (totalSec < 60) return `took ${totalSec}s`;
+          const m = Math.floor(totalSec / 60);
+          const s = totalSec % 60;
+          return `took ${m}m ${s}s`;
+        };
+
+        return (
+          <section className="space-y-3 rounded border border-gray-800 bg-gray-900/50 p-5">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+              <Clock className="w-4 h-4 text-orange-500" />
+              Timeline
+            </h3>
+            <div className="relative ml-2">
+              {active.map((entry, i) => (
+                <div key={entry.label} className="relative flex items-start gap-3 pb-4 last:pb-0">
+                  {i < active.length - 1 && (
+                    <div className="absolute left-[5px] top-3 bottom-0 w-px bg-gray-700" />
+                  )}
+                  <div className={`relative z-10 mt-0.5 h-[11px] w-[11px] rounded-full ${entry.color} shrink-0`} />
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium text-gray-200">{entry.label}</span>
+                    <span className="ml-2 text-xs text-gray-500">{fmt(entry.time!)}</span>
+                    {i > 0 && active[i - 1].time && entry.time && (
+                      <span className="ml-2 text-xs text-gray-600">
+                        {durationBetween(active[i - 1].time!, entry.time!)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
+
       {/* Original Report */}
       <section className="space-y-3 rounded border border-gray-800 bg-gray-900/50 p-5">
         <h3 className="text-sm font-semibold text-gray-200">Original Report</h3>
