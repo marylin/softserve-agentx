@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { Loader2, RefreshCw, Search } from "lucide-react";
 import { listIncidents } from "../lib/api";
-import type { IncidentListItem, IncidentStatus } from "../types/incident";
+import type { IncidentListItem, IncidentStatus, SeverityLevel } from "../types/incident";
 import SeverityBadge from "./SeverityBadge";
 
 interface Props {
@@ -26,10 +26,33 @@ const statusLabel: Record<IncidentStatus, string> = {
   failed: "Failed",
 };
 
+const ALL_SEVERITIES: SeverityLevel[] = ["P1", "P2", "P3", "P4"];
+const ALL_STATUSES: IncidentStatus[] = ["received", "triaging", "triaged", "routed", "resolved", "failed"];
+
+const filterInputClasses = "bg-gray-900 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100";
+
 export default function IncidentList({ onSelect }: Props) {
   const [incidents, setIncidents] = useState<IncidentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState("");
+  const [severityFilter, setSeverityFilter] = useState<SeverityLevel | "">("");
+  const [statusFilter, setStatusFilter] = useState<IncidentStatus | "">("");
+
+  const filteredIncidents = useMemo(() => {
+    return incidents.filter((inc) => {
+      if (searchText && !inc.title.toLowerCase().includes(searchText.toLowerCase())) {
+        return false;
+      }
+      if (severityFilter && inc.severity !== severityFilter) {
+        return false;
+      }
+      if (statusFilter && inc.status !== statusFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [incidents, searchText, severityFilter, statusFilter]);
 
   const fetch_ = useCallback(async () => {
     try {
@@ -65,6 +88,39 @@ export default function IncidentList({ onSelect }: Props) {
         </button>
       </div>
 
+      <div className="flex gap-3 flex-wrap items-center">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search by title..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className={`${filterInputClasses} pl-9 w-full`}
+          />
+        </div>
+        <select
+          value={severityFilter}
+          onChange={(e) => setSeverityFilter(e.target.value as SeverityLevel | "")}
+          className={filterInputClasses}
+        >
+          <option value="">All Severities</option>
+          {ALL_SEVERITIES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as IncidentStatus | "")}
+          className={filterInputClasses}
+        >
+          <option value="">All Statuses</option>
+          {ALL_STATUSES.map((s) => (
+            <option key={s} value={s}>{statusLabel[s]}</option>
+          ))}
+        </select>
+      </div>
+
       {error && (
         <div className="rounded border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {error}
@@ -79,6 +135,10 @@ export default function IncidentList({ onSelect }: Props) {
         <p className="py-10 text-center text-sm text-gray-500">
           No incidents reported yet.
         </p>
+      ) : filteredIncidents.length === 0 ? (
+        <p className="py-10 text-center text-sm text-gray-500">
+          No incidents match the current filters.
+        </p>
       ) : (
         <div className="overflow-x-auto rounded border border-gray-800">
           <table className="w-full text-left text-sm">
@@ -92,7 +152,7 @@ export default function IncidentList({ onSelect }: Props) {
               </tr>
             </thead>
             <tbody>
-              {incidents.map((inc) => (
+              {filteredIncidents.map((inc) => (
                 <tr
                   key={inc.id}
                   onClick={() => onSelect(inc.id)}
