@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Loader2, RefreshCw, Search } from "lucide-react";
+import { Loader2, RefreshCw, Search, Download } from "lucide-react";
 import { listIncidents } from "../lib/api";
 import type { IncidentListItem, IncidentStatus, SeverityLevel } from "../types/incident";
 import SeverityBadge from "./SeverityBadge";
@@ -54,6 +54,16 @@ export default function IncidentList({ onSelect }: Props) {
     });
   }, [incidents, searchText, severityFilter, statusFilter]);
 
+  const handleExport = () => {
+    const blob = new Blob([JSON.stringify(incidents, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `incidents-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const fetch_ = useCallback(async () => {
     try {
       const data = await listIncidents();
@@ -76,16 +86,26 @@ export default function IncidentList({ onSelect }: Props) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-100">Incidents</h2>
-        <button
-          onClick={() => {
-            setLoading(true);
-            fetch_();
-          }}
-          className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExport}
+            disabled={incidents.length === 0}
+            className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </button>
+          <button
+            onClick={() => {
+              setLoading(true);
+              fetch_();
+            }}
+            className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-3 flex-wrap items-center">
