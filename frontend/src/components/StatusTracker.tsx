@@ -163,6 +163,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
   const current = stepIndex(incident.status);
   const failed = incident.status === "failed";
+  const terminal = incident.status === "resolved" || incident.status === "failed";
 
   return (
     <div className="space-y-8">
@@ -196,7 +197,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                 {failed && i === 0 ? (
                   <XCircle className="w-5 h-5 text-red-500" />
                 ) : done ? (
-                  active ? (
+                  active && !terminal ? (
                     <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
                   ) : (
                     <CheckCircle2 className="w-5 h-5 text-orange-500" />

@@ -7,6 +7,7 @@ interface Metrics {
   total_incidents: number;
   status_distribution: Record<string, number>;
   severity_distribution: Record<string, number>;
+  component_distribution: Record<string, number>;
   average_confidence: number;
   resolution_rate: number;
   failure_rate: number;
@@ -140,6 +141,35 @@ export default function MetricsDashboard() {
           })}
         </div>
       </div>
+
+      {/* Component Distribution */}
+      {Object.keys(metrics.component_distribution).length > 0 && (
+        <div>
+          <h3 className="text-sm font-medium text-gray-300 mb-3">
+            Affected Components
+          </h3>
+          <div className="space-y-2">
+            {Object.entries(metrics.component_distribution)
+              .sort(([, a], [, b]) => b - a)
+              .map(([component, count]) => {
+                const total = Object.values(metrics.component_distribution).reduce((s, n) => s + n, 0);
+                const pct = total > 0 ? (count / total) * 100 : 0;
+                return (
+                  <div key={component} className="flex items-center gap-3">
+                    <span className="text-sm text-gray-300 w-48 truncate">{component}</span>
+                    <div className="flex-1 h-6 bg-gray-800 rounded overflow-hidden">
+                      <div
+                        className="h-full bg-orange-600 rounded"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="w-8 text-sm text-gray-400 text-right">{count}</span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       {/* Status Distribution */}
       <div>

@@ -36,10 +36,19 @@ async def get_metrics(db: AsyncSession = Depends(get_db)):
     resolved_count = status_counts.get("resolved", 0)
     failed_count = status_counts.get("failed", 0)
 
+    # Affected components distribution (extracted from description prefix)
+    desc_result = await db.execute(select(Incident.description))
+    component_counts: dict[str, int] = {}
+    for (desc,) in desc_result.all():
+        if desc and desc.startswith("[Affected Area: "):
+            area = desc.split("]")[0].replace("[Affected Area: ", "")
+            component_counts[area] = component_counts.get(area, 0) + 1
+
     return {
         "total_incidents": total,
         "status_distribution": status_counts,
         "severity_distribution": severity_counts,
+        "component_distribution": component_counts,
         "average_confidence": round(float(avg_confidence), 3),
         "resolution_rate": round(resolved_count / total, 3) if total > 0 else 0.0,
         "failure_rate": round(failed_count / total, 3) if total > 0 else 0.0,
