@@ -43,7 +43,18 @@
 | **LLM** | Claude Sonnet 4 (configurable: Anthropic direct or OpenRouter) |
 | **Inputs** | `TriageResult` from the Triage Agent, original incident title, description, reporter email, and reporter name. |
 | **Outputs** | `RoutingResult` -- Linear ticket ID, Linear ticket URL, Slack message timestamp, and email sent status. |
-| **Tools** | `create_linear_ticket` (Linear GraphQL API, severity-mapped priority), `send_slack_notification` (incoming webhook with Block Kit formatting, P1 to critical channel with @channel mention, P2-P4 to general channel), `send_email` (Resend API, HTML body, reporter + on-call team for P1). |
+| **Tools** | `create_linear_ticket` (Linear GraphQL API, severity-mapped priority, smart state routing, severity labels, auto-assign for P1/P2), `send_slack_notification` (incoming webhook with Block Kit formatting, P1 to critical channel with @channel mention, P2-P4 to general channel), `send_email` (Resend API, HTML body, reporter + on-call team for P1). |
+
+### System: Auto-Escalation Background Task
+
+| Field | Description |
+|-------|-------------|
+| **Role** | Monitors open incidents for SLA breaches and automatically escalates severity when response time thresholds are exceeded. Runs as a background loop, not as an LLM-powered agent. |
+| **Type** | Autonomous (rule-based, no LLM) |
+| **Trigger** | Runs every 60 seconds as an `asyncio` background task started at application boot. |
+| **Inputs** | All incidents in `triaged` or `routed` status with their triage severity and creation time. SLA thresholds loaded from `agent-config.yaml`. |
+| **Outputs** | Severity escalation (P4->P3, P3->P2, P2->P1) applied directly to the triage result in the database. Slack notification sent for each escalation. |
+| **Logic** | For each open incident, compares elapsed time against the SLA threshold for its current severity. If breached and not already P1, bumps severity one level and sends a Slack alert with the escalation details. |
 
 ---
 
@@ -57,9 +68,9 @@
         | POST /api/incidents (multipart)
         v
   FastAPI Backend -----> PostgreSQL (state, results)
-        |
-        | run_pipeline(incident_id)
-        |
+        |                     ^
+        | run_pipeline(id)    | agent-config.yaml
+        |                     | (severity criteria, SLA, routing, areas)
         v
   +--[Intake Agent]--+
   | Multimodal input  |     No tool calls.
@@ -84,7 +95,12 @@
           | RoutingResult (Pydantic model)
           v
   PostgreSQL (incident status -> "routed")
+        ^
+        |
+  [Auto-Escalation Loop] -- every 60s, checks SLA breaches, escalates severity
 ```
+
+**Configuration layer:** `agent-config.yaml` provides team-customizable settings (severity criteria, SLA thresholds, notification routing, affected areas, agent tool limits) that are loaded at runtime by the escalation task, the incident form's component picker, and the triage agent's severity prompt.
 
 ### Orchestration Approach
 
@@ -207,6 +223,27 @@ This strategy avoids loading large amounts of irrelevant context. The agent driv
   4. Triage proceeds normally but the duplicate flag is saved to the triage results table.
   5. Router creates the ticket and notifications, noting the potential duplicate in the ticket description.
 - **Expected outcome:** The duplicate relationship is recorded in the database. The team is aware that two reports may describe the same issue, avoiding duplicate investigation effort.
+
+### Use Case 4: SLA Breach Triggers Auto-Escalation
+
+- **Trigger:** A P3 incident has been in `triaged` status for over 4 hours (the configured SLA for P3) without resolution.
+- **Steps:**
+  1. The auto-escalation background task runs every 60 seconds and queries all incidents in `triaged` or `routed` status.
+  2. It compares each incident's elapsed time against the SLA threshold from `agent-config.yaml` (P3 = 240 minutes).
+  3. The P3 incident has been open for 250 minutes, exceeding its SLA.
+  4. The task escalates the severity from P3 to P2 by updating the triage result in the database.
+  5. A Slack notification is sent: "[ESCALATED] {title} -- SLA breach: was P3, escalated to P2. Original SLA was 240min, elapsed 250min."
+- **Expected outcome:** The incident is now P2, which has a 60-minute SLA. If still unresolved after that, it will escalate to P1. The team is alerted via Slack about the escalation. No manual intervention required.
+
+### Use Case 5: Team Customizes Severity Criteria via agent-config.yaml
+
+- **Trigger:** A team wants to change their P1 definition to include "payment processing failures" and extend the P4 SLA from 24 hours to 48 hours.
+- **Steps:**
+  1. Edit `backend/agent-config.yaml` and update the `severity_criteria.P1` field to include payment-specific language.
+  2. Update `sla_minutes.P4` from `1440` to `2880`.
+  3. Restart the backend service (`docker compose restart backend`).
+  4. The triage agent's system prompt now includes the updated severity criteria. The escalation task uses the new SLA thresholds.
+- **Expected outcome:** Future incidents involving payment failures are more likely to be classified as P1. P4 incidents have a 48-hour window before escalation. No code changes required.
 
 ---
 
@@ -397,6 +434,8 @@ PASSED test_exceeds_limit - ToolCallCounter(max=3) -> 3 calls succeed, 4th retur
 
 **Bottlenecks identified:** LLM API latency (10-30 seconds per agent), LLM rate limits, single-threaded pipeline execution, synchronous tool calls within agents.
 
+**Configurable SLA and severity:** The `agent-config.yaml` file allows teams to customize SLA thresholds and severity criteria without code changes, making the system adaptable to different team requirements and operational contexts without redeployment.
+
 See [SCALING.md](SCALING.md) for the full scaling analysis including cost estimates, component-level scaling strategies, and architecture decisions.
 
 ---
@@ -430,6 +469,16 @@ See [SCALING.md](SCALING.md) for the full scaling analysis including cost estima
 - **Synchronous pipeline for v1:** We chose a synchronous pipeline over async job queuing because it is simpler to reason about, easier to debug (one incident = one trace = one linear execution path), and reliable enough for the expected volume (<100 incidents/day). See [SCALING.md](SCALING.md) for what triggers the switch to async.
 
 - **Fallback parsing over strict validation:** When agent JSON output is malformed, we use conservative fallback values (P3 severity, 0.3 confidence) instead of failing the pipeline. This keeps the system running even when the LLM produces unexpected output, at the cost of occasionally producing a low-confidence triage that a human would review.
+
+### UX Audit: Turning Raw Data into Actionable Information
+
+A post-implementation UX audit revealed that raw agent output (confidence scores, severity levels, timestamps, SLA data) was not immediately actionable for users. The following changes turned data into decisions:
+
+- **Confidence labels:** Raw confidence scores (e.g., 0.72) were supplemented with human-readable labels: "High confidence" (>=0.85, green), "Moderate -- review recommended" (>=0.6, yellow), "Low -- verify manually" (<0.6, red). This tells the user what to *do*, not just what the number is.
+- **SLA countdown with color coding:** Instead of just showing when an incident was created, the status tracker shows a live countdown to SLA breach with green/red color and pulse animation on breach. This creates urgency where it matters.
+- **Description quality guidance:** The incident form gives real-time feedback as the user types: "Add more detail for better AI triage" (short), "Good start -- include error messages" (medium), "Good detail level" (sufficient). This improves input quality upstream.
+- **Component health disclaimers:** The health grid explicitly states "Health status is derived from open incident reports, not live system monitoring" and flags unmapped incidents. This prevents users from treating the view as a real-time monitoring dashboard.
+- **Estimated cost per triage:** The status tracker shows the estimated LLM cost for each triage, making operational costs visible and building trust through transparency.
 
 ---
 
