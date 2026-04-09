@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -13,10 +13,55 @@ import {
   Code,
   Layers,
   Paperclip,
+  Clock,
 } from "lucide-react";
 import { getIncident } from "../lib/api";
 import type { Incident, IncidentStatus } from "../types/incident";
 import SeverityBadge from "./SeverityBadge";
+
+const SLA_MINUTES: Record<string, number> = { P1: 15, P2: 60, P3: 240, P4: 1440 };
+
+function getSlaStatus(severity: string, createdAt: string) {
+  const slaMs = (SLA_MINUTES[severity] || 60) * 60 * 1000;
+  const elapsed = Date.now() - new Date(createdAt).getTime();
+  const remaining = slaMs - elapsed;
+  return { remaining, breached: remaining <= 0 };
+}
+
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(Math.abs(ms) / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  return `${minutes}m ${seconds}s`;
+}
+
+function SlaCountdown({ severity, createdAt }: { severity: string; createdAt: string }) {
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const { remaining, breached } = getSlaStatus(severity, createdAt);
+  // Force recalc with current time
+  const _ = now;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-xs font-medium ${
+        breached ? "text-red-400 animate-pulse" : "text-green-400"
+      }`}
+    >
+      <Clock className="w-3 h-3" />
+      {breached
+        ? `SLA BREACHED by ${formatDuration(remaining)}`
+        : `SLA: ${formatDuration(remaining)} remaining`}
+    </span>
+  );
+}
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -164,6 +209,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
             <span className="text-xs text-gray-400">
               Confidence: {(incident.triage.confidence * 100).toFixed(0)}%
             </span>
+            <SlaCountdown severity={incident.triage.severity} createdAt={incident.created_at} />
           </div>
 
           <div>
