@@ -2,7 +2,7 @@ import asyncio
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -34,6 +34,7 @@ def _handle_task_error(task: asyncio.Task):
 
 @router.post("/", status_code=201)
 async def create_incident(
+    background_tasks: BackgroundTasks,
     title: str = Form(...),
     description: str = Form(...),
     reporter_email: str = Form(...),
@@ -93,11 +94,14 @@ async def create_incident(
 
     async def _run_pipeline():
         from src.agents.orchestrator import run_pipeline
-        async with async_session() as bg_db:
-            await run_pipeline(incident.id, bg_db)
+        try:
+            async with async_session() as bg_db:
+                await run_pipeline(incident.id, bg_db)
+        except Exception as exc:
+            import traceback
+            traceback.print_exception(type(exc), exc, exc.__traceback__)
 
-    task = asyncio.create_task(_run_pipeline())
-    task.add_done_callback(_handle_task_error)
+    background_tasks.add_task(_run_pipeline)
 
     return {"id": str(incident.id), "status": incident.status}
 
