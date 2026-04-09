@@ -1,3 +1,33 @@
+# === Impeccable design skills + AI tool configs (local only) ===
+.agents/
+.claude/skills/
+skills-lock.json
+.codebuddy/
+.commandcode/
+.continue/
+.crush/
+.factory/
+.goose/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.trae/
+.windsurf/
+.zencoder/
+.playwright-mcp/
+.superpowers/
+skills/
+
 # === Python ===
 __pycache__/
 *.py[cod]
