@@ -87,25 +87,25 @@ export default function MetricsDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5" title="Total number of incidents across all statuses">
           <p className="text-sm text-gray-400">Total Incidents</p>
           <p className="text-3xl font-bold text-gray-100 mt-1">
             {metrics.total_incidents}
           </p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5" title="Average AI confidence score across all triaged incidents (higher = more reliable severity)">
           <p className="text-sm text-gray-400">Avg Confidence</p>
           <p className="text-3xl font-bold text-gray-100 mt-1">
             {(metrics.average_confidence * 100).toFixed(1)}%
           </p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5" title="Percentage of incidents that reached resolved status">
           <p className="text-sm text-gray-400">Resolution Rate</p>
           <p className="text-3xl font-bold text-gray-100 mt-1">
             {(metrics.resolution_rate * 100).toFixed(1)}%
           </p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5" title="Percentage of incidents where the triage pipeline failed">
           <p className="text-sm text-gray-400">Failure Rate</p>
           <p className="text-3xl font-bold text-gray-100 mt-1">
             {(metrics.failure_rate * 100).toFixed(1)}%
@@ -123,7 +123,7 @@ export default function MetricsDashboard() {
             const count = metrics.severity_distribution[sev] || 0;
             const pct = severityTotal > 0 ? (count / severityTotal) * 100 : 0;
             return (
-              <div key={sev} className="flex items-center gap-3">
+              <div key={sev} className="flex items-center gap-3" title={`${sev}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}%)`}>
                 <span className="w-8 text-sm font-medium text-gray-300">
                   {sev}
                 </span>
@@ -131,6 +131,7 @@ export default function MetricsDashboard() {
                   <div
                     className={`h-full ${SEVERITY_COLORS[sev]} rounded`}
                     style={{ width: `${pct}%` }}
+                    title={`${sev}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}% of total)`}
                   />
                 </div>
                 <span className="w-8 text-sm text-gray-400 text-right">
@@ -155,12 +156,13 @@ export default function MetricsDashboard() {
                 const total = Object.values(metrics.component_distribution).reduce((s, n) => s + n, 0);
                 const pct = total > 0 ? (count / total) * 100 : 0;
                 return (
-                  <div key={component} className="flex items-center gap-3">
+                  <div key={component} className="flex items-center gap-3" title={`${component}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}%)`}>
                     <span className="text-sm text-gray-300 w-48 truncate">{component}</span>
                     <div className="flex-1 h-6 bg-gray-800 rounded overflow-hidden">
                       <div
                         className="h-full bg-orange-600 rounded"
                         style={{ width: `${pct}%` }}
+                        title={`${component}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}% of total)`}
                       />
                     </div>
                     <span className="w-8 text-sm text-gray-400 text-right">{count}</span>
@@ -181,7 +183,7 @@ export default function MetricsDashboard() {
             (status) => {
               const count = metrics.status_distribution[status] || 0;
               return (
-                <div key={status} className="flex items-center gap-3">
+                <div key={status} className="flex items-center gap-3" title={`${count} incident${count !== 1 ? "s" : ""} in ${status} status`}>
                   <span
                     className={`w-2.5 h-2.5 rounded-full ${STATUS_COLORS[status]}`}
                   />
