@@ -170,7 +170,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
   const current = stepIndex(incident.status);
   const failed = incident.status === "failed";
-  const terminal = incident.status === "resolved" || incident.status === "failed";
+  const terminal = incident.status === "routed" || incident.status === "resolved" || incident.status === "failed";
 
   return (
     <div className="space-y-8">
