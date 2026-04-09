@@ -1,0 +1,59 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.venv/
+venv/
+env/
+dist/
+build/
+*.whl
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+# === Node.js ===
+node_modules/
+dist/
+.vite/
+
+# === Environment ===
+.env
+.env.local
+.env.*.local
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# === Docker ===
+*.log
+
+# === Project-specific ===
+# Uploaded incident files (runtime)
+uploads/
+
+# Medusa full repo clone (used by build_kb.py locally, NOT committed)
+backend/knowledge-base/medusa-source/
+
+# Langfuse local data
+langfuse-pgdata/
+
+# Test artifacts
+docs/evidence/*.log
+docs/evidence/*.txt
+
+# Build artifacts
+*.tar
+*.gz
