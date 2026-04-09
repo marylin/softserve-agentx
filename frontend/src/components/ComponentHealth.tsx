@@ -78,7 +78,11 @@ const STATUS_CONFIG: Record<
   },
 };
 
-export default function ComponentHealth() {
+interface Props {
+  onSelectComponent?: (area: string) => void;
+}
+
+export default function ComponentHealth({ onSelectComponent }: Props) {
   const [components, setComponents] = useState<ComponentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [unmappedCount, setUnmappedCount] = useState(0);
@@ -200,7 +204,8 @@ export default function ComponentHealth() {
           return (
             <div
               key={comp.name}
-              className={`bg-gray-900 border border-gray-800 rounded-lg p-4 border-l-4 ${cfg.border}`}
+              onClick={() => onSelectComponent?.(comp.name)}
+              className={`bg-gray-900 border border-gray-800 rounded-lg p-4 border-l-4 ${cfg.border} cursor-pointer hover:border-gray-600 transition-colors`}
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-100">

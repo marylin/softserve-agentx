@@ -146,7 +146,15 @@ export default function App() {
           />
         )}
         {view === "metrics" && <MetricsDashboard />}
-        {view === "health" && <ComponentHealth />}
+        {view === "health" && (
+          <ComponentHealth
+            onSelectComponent={(area) => {
+              navigate("list");
+              window.history.replaceState({}, "", `/incidents?area=${encodeURIComponent(area)}`);
+              window.dispatchEvent(new CustomEvent("filter-area", { detail: area }));
+            }}
+          />
+        )}
         {view === "detail" && selectedId && (
           <StatusTracker
             incidentId={selectedId}

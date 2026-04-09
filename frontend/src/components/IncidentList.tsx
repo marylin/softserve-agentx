@@ -65,7 +65,8 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
 
   const filteredIncidents = useMemo(() => {
     return incidents.filter((inc) => {
-      if (searchText && !inc.title.toLowerCase().includes(searchText.toLowerCase())) {
+      if (searchText && !inc.title.toLowerCase().includes(searchText.toLowerCase()) &&
+          !(inc.description || "").toLowerCase().includes(searchText.toLowerCase())) {
         return false;
       }
       if (severityFilter && inc.severity !== severityFilter) {
@@ -87,6 +88,23 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  // Check URL for area filter on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const area = params.get("area");
+    if (area) setSearchText(area);
+  }, []);
+
+  // Listen for filter-area events from health cards
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const area = (e as CustomEvent).detail;
+      setSearchText(area);
+    };
+    window.addEventListener("filter-area", handler);
+    return () => window.removeEventListener("filter-area", handler);
+  }, []);
 
   const fetch_ = useCallback(async () => {
     try {
@@ -137,7 +155,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
-            placeholder="Search by title..."
+            placeholder="Search by title or description..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             className={`${filterInputClasses} pl-9 w-full`}
