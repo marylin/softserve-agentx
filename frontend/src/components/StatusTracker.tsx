@@ -67,8 +67,8 @@ function SlaCountdown({ severity, createdAt }: { severity: string; createdAt: st
 
 function confidenceLabel(c: number): { text: string; color: string } {
   if (c >= 0.85) return { text: "High confidence", color: "text-green-400" };
-  if (c >= 0.6) return { text: "Moderate -- review recommended", color: "text-yellow-400" };
-  return { text: "Low -- verify manually", color: "text-red-400" };
+  if (c >= 0.6) return { text: "Moderate \u2014 review recommended", color: "text-yellow-400" };
+  return { text: "Low \u2014 verify manually", color: "text-red-400" };
 }
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -141,7 +141,9 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
   useEffect(() => {
     if (incident?.triage && !similarFetched.current) {
       similarFetched.current = true;
-      getSimilarIncidents(incidentId).then(setSimilarIncidents).catch(() => {});
+      getSimilarIncidents(incidentId).then(setSimilarIncidents).catch(() => {
+        // Similar incidents are supplementary; failure is non-critical
+      });
     }
   }, [incident?.triage, incidentId]);
 
@@ -150,9 +152,9 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       <div className="space-y-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+          className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+          <ArrowLeft className="w-4 h-4" /> Back to incidents
         </button>
         <div className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           <XCircle className="w-4 h-4 shrink-0" />
@@ -181,7 +183,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
         onClick={onBack}
         className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200 transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+        <ArrowLeft className="w-4 h-4" /> Back to incidents
       </button>
 
       {/* Title */}
@@ -250,9 +252,10 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
               setRetrying(false);
             }}
             disabled={retrying}
-            className="mt-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm rounded"
+            className="mt-3 flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm rounded transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            {retrying ? "Retrying..." : "Retry Triage"}
+            {retrying && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
+            {retrying ? "Retrying..." : "Retry triage"}
           </button>
           {retryError && <p className="text-xs text-red-400 mt-1">Retry failed. Try again.</p>}
         </div>
@@ -272,7 +275,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
               const cl = confidenceLabel(incident.triage.confidence);
               return (
                 <span className={`text-xs ${cl.color}`}>
-                  {(incident.triage.confidence * 100).toFixed(0)}% -- {cl.text}
+                  {(incident.triage.confidence * 100).toFixed(0)}% &mdash; {cl.text}
                 </span>
               );
             })()}
@@ -400,9 +403,9 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                   href={incident.routing.linear_ticket_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-400 hover:underline"
+                  className="text-indigo-400 hover:underline focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
                 >
-                  Linear Ticket: {incident.routing.linear_ticket_id}
+                  Linear ticket: {incident.routing.linear_ticket_id}
                 </a>
               </div>
             )}

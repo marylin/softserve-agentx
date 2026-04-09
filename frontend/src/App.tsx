@@ -34,7 +34,9 @@ export default function App() {
           .reduce((sum, [, v]) => sum + (v as number), 0);
         const critical = (data.severity_distribution?.P1 || 0);
         setAlertCounts({ open, critical });
-      } catch {}
+      } catch {
+        // Metrics fetch is non-critical; silently retry on next interval
+      }
     };
     fetchCounts();
     const interval = setInterval(fetchCounts, 15000);
@@ -75,7 +77,7 @@ export default function App() {
           <nav className="flex gap-4">
             <button
               onClick={() => navigate("form")}
-              className={`px-4 py-2 rounded text-sm ${
+              className={`px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
                 view === "form"
                   ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
@@ -85,7 +87,7 @@ export default function App() {
             </button>
             <button
               onClick={() => navigate("list")}
-              className={`relative px-4 py-2 rounded text-sm ${
+              className={`relative px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
                 view === "list"
                   ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
@@ -100,7 +102,7 @@ export default function App() {
             </button>
             <button
               onClick={() => navigate("metrics")}
-              className={`px-4 py-2 rounded text-sm ${
+              className={`px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
                 view === "metrics"
                   ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
@@ -110,7 +112,7 @@ export default function App() {
             </button>
             <button
               onClick={() => navigate("health")}
-              className={`relative px-4 py-2 rounded text-sm ${
+              className={`relative px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
                 view === "health"
                   ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
@@ -125,7 +127,7 @@ export default function App() {
               href={`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/docs`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-300 text-sm flex items-center gap-1"
+              className="text-gray-500 hover:text-gray-300 text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
             >
               <FileText className="w-3.5 h-3.5" />
               API

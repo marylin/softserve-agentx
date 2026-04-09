@@ -163,6 +163,7 @@ export default function ComponentHealth({ onSelectComponent }: Props) {
           setLoading(false);
         }
       } catch {
+        // Health data fetch failed; show empty state on next render
         if (active) setLoading(false);
       }
     }
@@ -227,7 +228,7 @@ export default function ComponentHealth({ onSelectComponent }: Props) {
           );
         })}
       </div>
-      <div className="mt-6 space-y-2 text-xs text-gray-500">
+      <div className="space-y-2 text-xs text-gray-500">
         <p>Health status is derived from open incident reports, not live system monitoring.</p>
         {unmappedCount > 0 && (
           <p className="text-yellow-500">{unmappedCount} incident(s) not mapped to a component (no affected area selected).</p>

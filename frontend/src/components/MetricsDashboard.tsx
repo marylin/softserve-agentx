@@ -57,6 +57,7 @@ export default function MetricsDashboard() {
           setLoading(false);
         }
       } catch {
+        // Metrics fetch failed; fall through to error state
         if (active) setLoading(false);
       }
     }

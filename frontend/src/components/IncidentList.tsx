@@ -53,7 +53,7 @@ const statusLabel: Record<IncidentStatus, string> = {
 const ALL_SEVERITIES: SeverityLevel[] = ["P1", "P2", "P3", "P4"];
 const ALL_STATUSES: IncidentStatus[] = ["received", "triaging", "triaged", "routed", "resolved", "failed"];
 
-const filterInputClasses = "bg-gray-900 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100";
+const filterInputClasses = "bg-gray-900 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500";
 
 export default function IncidentList({ onSelect, onReportNew }: Props) {
   const [incidents, setIncidents] = useState<IncidentListItem[]>([]);
@@ -132,7 +132,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
           <button
             onClick={handleExport}
             disabled={incidents.length === 0}
-            className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <Download className="w-4 h-4" />
             Export
@@ -142,7 +142,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
               setLoading(true);
               fetch_();
             }}
-            className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+            className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -200,7 +200,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
         <div className="text-center py-12">
           <p className="text-gray-500 mb-3">No incidents reported yet.</p>
           {onReportNew && (
-            <button onClick={onReportNew} className="text-indigo-400 hover:text-indigo-300 text-sm">
+            <button onClick={onReportNew} className="text-indigo-400 hover:text-indigo-300 text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded">
               Report your first incident
             </button>
           )}
@@ -208,7 +208,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
       ) : filteredIncidents.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-500">
           No incidents match the current filters.
-          <button onClick={() => { setSearchText(""); setSeverityFilter(""); setStatusFilter(""); }} className="text-indigo-400 hover:text-indigo-300 text-sm ml-2">
+          <button onClick={() => { setSearchText(""); setSeverityFilter(""); setStatusFilter(""); }} className="text-indigo-400 hover:text-indigo-300 text-sm ml-2 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded">
             Clear filters
           </button>
         </p>
@@ -233,7 +233,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
                   tabIndex={0}
                   role="button"
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(inc.id); } }}
-                  className="cursor-pointer border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors"
+                  className="cursor-pointer border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors focus:outline-none focus:bg-gray-800/40"
                 >
                   <td className="px-4 py-3 text-gray-200">{inc.title}</td>
                   <td className="px-4 py-3 text-gray-400">{inc.reporter_name}</td>

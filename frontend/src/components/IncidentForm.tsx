@@ -110,7 +110,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
   };
 
   const inputClasses =
-    "w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500";
+    "w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -179,14 +179,14 @@ export default function IncidentForm({ onSubmitted }: Props) {
           id="affected-area"
           value={affectedArea}
           onChange={(e) => setAffectedArea(e.target.value)}
-          className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
         >
           <option value="">Select affected area...</option>
           {areas.map(area => (
             <option key={area} value={area}>{area}</option>
           ))}
         </select>
-        <p className="text-xs text-gray-500 mt-1">Recommended -- enables component health tracking</p>
+        <p className="text-xs text-gray-500 mt-1">Recommended &mdash; enables component health tracking</p>
       </div>
 
       <div>
@@ -201,7 +201,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
                 onClick={handleVoice}
                 aria-label={listening ? "Stop voice recording" : "Start voice input"}
                 aria-pressed={listening}
-                className={`text-sm flex items-center gap-1 ${listening ? "text-red-400" : "text-indigo-400 hover:text-indigo-300"}`}
+                className={`text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded ${listening ? "text-red-400" : "text-indigo-400 hover:text-indigo-300"}`}
               >
                 <Mic className="w-3 h-3" aria-hidden="true" />
                 {listening ? "Stop" : "Voice"}
@@ -211,7 +211,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
               type="button"
               onClick={handleSuggest}
               disabled={!title || suggesting}
-              className="text-sm text-indigo-400 hover:text-indigo-300 disabled:text-gray-600 flex items-center gap-1"
+              className="text-sm text-indigo-400 hover:text-indigo-300 disabled:text-gray-600 flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
             >
               {suggesting ? (
                 <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
@@ -238,7 +238,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
             const len = description.length;
             if (len === 0) return <span className="text-xs text-gray-500">Detailed descriptions improve AI triage accuracy</span>;
             if (len < 100) return <span className="text-xs text-yellow-400">Add more detail for better AI triage ({len}/5000)</span>;
-            if (len < 200) return <span className="text-xs text-gray-400">Good start -- include error messages and steps to reproduce ({len}/5000)</span>;
+            if (len < 200) return <span className="text-xs text-gray-400">Good start &mdash; include error messages and steps to reproduce ({len}/5000)</span>;
             return <span className="text-xs text-green-400">Good detail level ({len}/5000)</span>;
           })()}
         </div>
@@ -252,10 +252,10 @@ export default function IncidentForm({ onSubmitted }: Props) {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+            className="flex items-center gap-2 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <Paperclip className="w-4 h-4" aria-hidden="true" />
-            Attach Files
+            Attach files
           </button>
           <ScreenRecorder onRecorded={(file) => addFiles([file])} />
           <input
@@ -287,7 +287,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
                   type="button"
                   onClick={() => removeFile(i)}
                   aria-label={"Remove " + file.name}
-                  className="text-gray-500 hover:text-red-400 transition-colors"
+                  className="text-gray-500 hover:text-red-400 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
                 >
                   <X className="w-4 h-4" aria-hidden="true" />
                 </button>
@@ -300,10 +300,10 @@ export default function IncidentForm({ onSubmitted }: Props) {
       <button
         type="submit"
         disabled={submitting}
-        className="flex items-center gap-2 rounded bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="flex items-center gap-2 rounded bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
       >
         {submitting && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
-        {submitting ? "Submitting..." : "Submit Incident"}
+        {submitting ? "Submitting..." : "Submit incident"}
       </button>
     </form>
   );
