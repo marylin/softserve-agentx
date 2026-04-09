@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.incidents import router as incidents_router
+from src.api.metrics import router as metrics_router
 from src.api.webhooks import router as webhooks_router
 from src.config import settings
 
@@ -31,6 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(incidents_router, prefix="/incidents", tags=["incidents"])
+app.include_router(metrics_router, prefix="/metrics", tags=["metrics"])
 app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 
 
