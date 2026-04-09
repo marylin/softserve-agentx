@@ -165,7 +165,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
   if (!incident) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
       </div>
     );
   }
@@ -201,16 +201,16 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
             <div key={step.key} className="flex items-center gap-2">
               {i > 0 && (
                 <div
-                  className={`h-px w-6 ${done ? "bg-orange-500" : "bg-gray-700"}`}
+                  className={`h-px w-6 ${done ? "bg-indigo-500" : "bg-gray-700"}`}
                 />
               )}
               <div className="flex items-center gap-1.5">
                 {failed && i === 0 ? (
                   <XCircle className="w-5 h-5 text-red-500" />
                 ) : done ? (
-                  <CheckCircle2 className="w-5 h-5 text-orange-500" />
+                  <CheckCircle2 className="w-5 h-5 text-indigo-500" />
                 ) : isInProgress ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+                  <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />
                 ) : (
                   <Circle className="w-5 h-5 text-gray-600" />
                 )}
@@ -250,7 +250,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
               setRetrying(false);
             }}
             disabled={retrying}
-            className="mt-3 px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white text-sm rounded"
+            className="mt-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm rounded"
           >
             {retrying ? "Retrying..." : "Retry Triage"}
           </button>
@@ -260,9 +260,9 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
       {/* Triage Results */}
       {incident.triage && (
-        <section className="space-y-4 rounded border border-gray-800 bg-gray-900/50 p-5">
+        <section className="space-y-4 rounded border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
-            <FileText className="w-4 h-4 text-orange-500" />
+            <FileText className="w-4 h-4 text-indigo-500" />
             Triage Results
           </h3>
 
@@ -324,7 +324,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
               <ul className="space-y-1">
                 {incident.triage.code_references.map((ref, i) => (
                   <li key={i} className="text-xs text-gray-300">
-                    <code className="rounded bg-gray-800 px-1.5 py-0.5 text-orange-400">
+                    <code className="rounded bg-gray-800 px-1.5 py-0.5 text-indigo-400">
                       {ref.file}
                       {ref.line != null && `:${ref.line}`}
                     </code>{" "}
@@ -354,9 +354,9 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
       {/* Similar Incidents */}
       {similarIncidents.length > 0 && (
-        <section className="space-y-3 rounded border border-gray-800 bg-gray-900/50 p-5">
+        <section className="space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
-            <Link2 className="w-4 h-4 text-orange-500" />
+            <Link2 className="w-4 h-4 text-indigo-500" />
             Related Incidents
           </h3>
           <ul className="space-y-2">
@@ -373,7 +373,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                 {sim.shared_modules.map((mod) => (
                   <span
                     key={mod}
-                    className="rounded bg-orange-500/10 border border-orange-500/30 px-1.5 py-0.5 text-xs text-orange-400"
+                    className="rounded bg-indigo-500/10 border border-indigo-500/30 px-1.5 py-0.5 text-xs text-indigo-400"
                   >
                     {mod}
                   </span>
@@ -386,9 +386,9 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
       {/* Routing Results */}
       {incident.routing && (
-        <section className="space-y-3 rounded border border-gray-800 bg-gray-900/50 p-5">
+        <section className="space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
-            <ExternalLink className="w-4 h-4 text-orange-500" />
+            <ExternalLink className="w-4 h-4 text-indigo-500" />
             Routing
           </h3>
 
@@ -400,7 +400,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                   href={incident.routing.linear_ticket_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-orange-400 hover:underline"
+                  className="text-indigo-400 hover:underline"
                 >
                   Linear Ticket: {incident.routing.linear_ticket_id}
                 </a>
@@ -428,7 +428,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
           { label: "Received", time: incident.created_at, color: "bg-gray-500" },
           { label: "Triaging", time: incident.created_at, color: "bg-yellow-500" },
           { label: "Triaged", time: incident.triage?.created_at ?? null, color: "bg-blue-500" },
-          { label: "Routed", time: incident.routing?.created_at ?? null, color: "bg-orange-500" },
+          { label: "Routed", time: incident.routing?.created_at ?? null, color: "bg-indigo-500" },
           { label: "Resolved", time: incident.routing?.resolved_at ?? null, color: "bg-green-500" },
         ];
         const active = entries.filter((e) => e.time !== null);
@@ -455,9 +455,9 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
         };
 
         return (
-          <section className="space-y-3 rounded border border-gray-800 bg-gray-900/50 p-5">
+          <section className="space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
-              <Clock className="w-4 h-4 text-orange-500" />
+              <Clock className="w-4 h-4 text-indigo-500" />
               Timeline
             </h3>
             <div className="relative ml-2">
@@ -484,7 +484,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       })()}
 
       {/* Original Report */}
-      <section className="space-y-3 rounded border border-gray-800 bg-gray-900/50 p-5">
+      <section className="space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
         <h3 className="text-sm font-semibold text-gray-200">Original Report</h3>
         <div className="text-sm text-gray-400">
           <p>
@@ -528,7 +528,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-orange-400 hover:underline"
+                          className="text-indigo-400 hover:underline"
                         >
                           {att.original_filename}
                         </a>

@@ -67,7 +67,7 @@ export default function App() {
       <header className="border-b border-gray-800 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Shield className="w-6 h-6 text-orange-500" />
+            <Shield className="w-6 h-6 text-indigo-500" />
             <h1 className="text-xl font-semibold text-gray-100">
               AgentX SRE Triage
             </h1>
@@ -75,9 +75,9 @@ export default function App() {
           <nav className="flex gap-4">
             <button
               onClick={() => navigate("form")}
-              className={`px-3 py-1.5 rounded text-sm ${
+              className={`px-4 py-2 rounded text-sm ${
                 view === "form"
-                  ? "bg-orange-600 text-white"
+                  ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
@@ -85,24 +85,24 @@ export default function App() {
             </button>
             <button
               onClick={() => navigate("list")}
-              className={`relative px-3 py-1.5 rounded text-sm ${
+              className={`relative px-4 py-2 rounded text-sm ${
                 view === "list"
-                  ? "bg-orange-600 text-white"
+                  ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
               Incidents
               {alertCounts.open > 0 && (
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-indigo-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                   {alertCounts.open}
                 </span>
               )}
             </button>
             <button
               onClick={() => navigate("metrics")}
-              className={`px-3 py-1.5 rounded text-sm ${
+              className={`px-4 py-2 rounded text-sm ${
                 view === "metrics"
-                  ? "bg-orange-600 text-white"
+                  ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
@@ -110,9 +110,9 @@ export default function App() {
             </button>
             <button
               onClick={() => navigate("health")}
-              className={`relative px-3 py-1.5 rounded text-sm ${
+              className={`relative px-4 py-2 rounded text-sm ${
                 view === "health"
-                  ? "bg-orange-600 text-white"
+                  ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >

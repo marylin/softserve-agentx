@@ -17,7 +17,7 @@ const STATUS_COLORS: Record<string, string> = {
   received: "bg-gray-400",
   triaging: "bg-yellow-400",
   triaged: "bg-blue-400",
-  routed: "bg-orange-400",
+  routed: "bg-indigo-400",
   resolved: "bg-green-400",
   failed: "bg-red-400",
 };
@@ -96,36 +96,39 @@ export default function MetricsDashboard() {
     <div className="space-y-8">
       <h2 className="text-lg font-semibold text-gray-100">Metrics</h2>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI Stats Bar */}
+      <div className="flex items-center gap-6 bg-gray-900 rounded-lg border border-gray-800 px-5 py-4">
         <Tooltip text="Total incidents across all statuses">
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
-            <p className="text-sm text-gray-400">Total Incidents</p>
-            <p className="text-3xl font-bold text-gray-100 mt-1">
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Total Incidents</p>
+            <p className="text-lg font-semibold text-gray-100">
               {metrics.total_incidents}
             </p>
           </div>
         </Tooltip>
+        <div className="w-px h-8 bg-gray-800" />
         <Tooltip text="Average AI confidence score across all triaged incidents (higher = more reliable severity)">
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
-            <p className="text-sm text-gray-400">Avg Confidence</p>
-            <p className="text-3xl font-bold text-gray-100 mt-1">
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Avg Confidence</p>
+            <p className="text-lg font-semibold text-gray-100">
               {(metrics.average_confidence * 100).toFixed(1)}%
             </p>
           </div>
         </Tooltip>
+        <div className="w-px h-8 bg-gray-800" />
         <Tooltip text="Percentage of incidents that reached resolved status">
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
-            <p className="text-sm text-gray-400">Resolution Rate</p>
-            <p className="text-3xl font-bold text-gray-100 mt-1">
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Resolution Rate</p>
+            <p className="text-lg font-semibold text-gray-100">
               {(metrics.resolution_rate * 100).toFixed(1)}%
             </p>
           </div>
         </Tooltip>
+        <div className="w-px h-8 bg-gray-800" />
         <Tooltip text="Percentage of incidents where the triage pipeline failed">
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
-            <p className="text-sm text-gray-400">Failure Rate</p>
-            <p className="text-3xl font-bold text-gray-100 mt-1">
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Failure Rate</p>
+            <p className="text-lg font-semibold text-gray-100">
               {(metrics.failure_rate * 100).toFixed(1)}%
             </p>
           </div>
@@ -178,10 +181,10 @@ export default function MetricsDashboard() {
                 return (
                   <Tooltip key={component} text={`${component}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}% of total)`}>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-300 w-48 truncate">{component}</span>
+                      <span className="text-sm text-gray-300 w-32 sm:w-48 truncate">{component}</span>
                       <div className="flex-1 h-6 bg-gray-800 rounded overflow-hidden">
                         <div
-                          className="h-full bg-orange-600 rounded"
+                          className="h-full bg-indigo-600 rounded"
                           style={{ width: `${pct}%` }}
                         />
                       </div>

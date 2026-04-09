@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  CheckCircle2,
-  AlertTriangle,
-  AlertOctagon,
-  XCircle,
-  Loader2,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { listIncidents } from "../lib/api";
 
 const COMPONENTS = [
@@ -50,31 +44,27 @@ function relativeTime(iso: string): string {
 
 const STATUS_CONFIG: Record<
   HealthStatus,
-  { label: string; color: string; border: string; icon: typeof CheckCircle2 }
+  { label: string; textColor: string; dotColor: string }
 > = {
   healthy: {
     label: "Healthy",
-    color: "text-green-400",
-    border: "border-l-green-500",
-    icon: CheckCircle2,
+    textColor: "text-green-400",
+    dotColor: "bg-green-400",
   },
   degraded: {
     label: "Degraded",
-    color: "text-yellow-400",
-    border: "border-l-yellow-500",
-    icon: AlertTriangle,
+    textColor: "text-yellow-400",
+    dotColor: "bg-yellow-400",
   },
   impacted: {
     label: "Impacted",
-    color: "text-orange-400",
-    border: "border-l-orange-500",
-    icon: AlertOctagon,
+    textColor: "text-orange-400",
+    dotColor: "bg-orange-400",
   },
   critical: {
     label: "Critical",
-    color: "text-red-400",
-    border: "border-l-red-500",
-    icon: XCircle,
+    textColor: "text-red-400",
+    dotColor: "bg-red-400",
   },
 };
 
@@ -197,39 +187,34 @@ export default function ComponentHealth({ onSelectComponent }: Props) {
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-100">Component Health</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="bg-gray-900 rounded-lg border border-gray-800">
         {components.map((comp) => {
           const cfg = STATUS_CONFIG[comp.status];
-          const Icon = cfg.icon;
           return (
             <div
               key={comp.name}
               onClick={() => onSelectComponent?.(comp.name)}
-              className={`bg-gray-900 border border-gray-800 rounded-lg p-4 border-l-4 ${cfg.border} cursor-pointer hover:border-gray-600 transition-colors`}
+              className="flex items-center justify-between px-4 py-3 border-b border-gray-800 last:border-0 cursor-pointer hover:bg-gray-800/50 transition-colors"
             >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-100">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${cfg.dotColor}`} />
+                <span className="text-sm font-medium text-gray-100 truncate">
                   {comp.name}
-                </h3>
-                <div className={`flex items-center gap-1 ${cfg.color}`}>
-                  <Icon className="w-4 h-4" />
-                  <span className="text-xs font-medium">{cfg.label}</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-xs text-gray-400">
-                <span>
-                  {comp.openCount} open incident
-                  {comp.openCount !== 1 ? "s" : ""}
                 </span>
-                <span>
+              </div>
+              <div className="flex items-center gap-4 shrink-0 ml-4">
+                <span className={`text-xs font-medium ${cfg.textColor}`}>
+                  {cfg.label}
+                </span>
+                <span className="text-xs text-gray-400 w-20 text-right">
+                  {comp.openCount} open
+                </span>
+                <span className="text-xs text-gray-500 w-24 text-right">
                   {comp.lastIncidentTime
                     ? relativeTime(comp.lastIncidentTime)
                     : "No incidents"}
                 </span>
               </div>
-              {comp.status === "healthy" && comp.lastIncidentTime && (
-                <p className="text-xs text-gray-500 mt-1">Last incident: {relativeTime(comp.lastIncidentTime)}</p>
-              )}
             </div>
           );
         })}

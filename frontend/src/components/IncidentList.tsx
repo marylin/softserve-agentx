@@ -35,7 +35,7 @@ interface Props {
 const statusColors: Record<IncidentStatus, string> = {
   received: "text-blue-400",
   triaging: "text-yellow-400",
-  triaged: "text-orange-400",
+  triaged: "text-indigo-400",
   routed: "text-purple-400",
   resolved: "text-green-400",
   failed: "text-red-400",
@@ -158,12 +158,14 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
             placeholder="Search by title or description..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
+            aria-label="Search incidents by title"
             className={`${filterInputClasses} pl-9 w-full`}
           />
         </div>
         <select
           value={severityFilter}
           onChange={(e) => setSeverityFilter(e.target.value as SeverityLevel | "")}
+          aria-label="Filter by severity"
           className={filterInputClasses}
         >
           <option value="">All Severities</option>
@@ -174,6 +176,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as IncidentStatus | "")}
+          aria-label="Filter by status"
           className={filterInputClasses}
         >
           <option value="">All Statuses</option>
@@ -191,13 +194,13 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
 
       {loading && incidents.length === 0 ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+          <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
         </div>
       ) : incidents.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 mb-3">No incidents reported yet.</p>
           {onReportNew && (
-            <button onClick={onReportNew} className="text-orange-400 hover:text-orange-300 text-sm">
+            <button onClick={onReportNew} className="text-indigo-400 hover:text-indigo-300 text-sm">
               Report your first incident
             </button>
           )}
@@ -205,7 +208,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
       ) : filteredIncidents.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-500">
           No incidents match the current filters.
-          <button onClick={() => { setSearchText(""); setSeverityFilter(""); setStatusFilter(""); }} className="text-orange-400 hover:text-orange-300 text-sm ml-2">
+          <button onClick={() => { setSearchText(""); setSeverityFilter(""); setStatusFilter(""); }} className="text-indigo-400 hover:text-indigo-300 text-sm ml-2">
             Clear filters
           </button>
         </p>
@@ -227,6 +230,9 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
                 <tr
                   key={inc.id}
                   onClick={() => onSelect(inc.id)}
+                  tabIndex={0}
+                  role="button"
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(inc.id); } }}
                   className="cursor-pointer border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors"
                 >
                   <td className="px-4 py-3 text-gray-200">{inc.title}</td>
