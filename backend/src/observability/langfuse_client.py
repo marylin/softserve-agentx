@@ -1,4 +1,7 @@
 from src.config import settings
+from src.observability.logging import get_logger
+
+log = get_logger("observability.langfuse")
 
 
 class _NoOp:
@@ -37,7 +40,10 @@ def _get_client():
                 public_key=settings.langfuse_public_key,
                 host=settings.langfuse_host,
             )
-        except Exception:
+            _client.auth_check()
+            log.info("langfuse_initialized", host=settings.langfuse_host)
+        except Exception as e:
+            log.warning("langfuse_init_failed", error=str(e))
             _client = _NoOp()
     else:
         _client = _NoOp()
@@ -45,78 +51,110 @@ def _get_client():
 
 
 class TraceWrapper:
-    """Wraps Langfuse v4 tracing API into a simple span-based interface."""
+    """Wraps Langfuse v4 tracing using start_as_current_observation context managers."""
 
-    def __init__(self, client, trace_id: str, name: str, metadata: dict):
+    def __init__(self, client, name: str, metadata: dict):
         self._client = client
-        self.trace_id = trace_id
         self._name = name
         self._metadata = metadata
+        self._root_span = None
+        self._root_ctx = None
+
+        # Start a root agent span that acts as our "trace"
+        try:
+            self._root_ctx = self._client.start_as_current_observation(
+                name=name,
+                as_type="agent",
+                metadata=metadata,
+            )
+            self._root_span = self._root_ctx.__enter__()
+            log.info("langfuse_trace_started", name=name)
+        except Exception as e:
+            log.warning("langfuse_trace_start_failed", error=str(e))
 
     def span(self, name: str, metadata: dict | None = None):
-        return SpanWrapper(self._client, self.trace_id, name, metadata or {})
+        return SpanWrapper(self._client, name, metadata or {})
 
     def event(self, name: str, metadata: dict | None = None):
         try:
-            self._client.create_event(
-                trace_id=self.trace_id,
+            self._client.start_observation(
                 name=name,
+                as_type="tool",
                 metadata=metadata or {},
             )
         except Exception:
             pass
 
     def update(self, **kwargs):
-        pass
+        # Close root span
+        try:
+            if self._root_ctx:
+                self._root_ctx.__exit__(None, None, None)
+        except Exception:
+            pass
+        # Flush to ensure data is sent
+        try:
+            self._client.flush()
+        except Exception:
+            pass
 
 
 class SpanWrapper:
-    """Wraps a Langfuse span with generation and event logging."""
+    """Wraps a Langfuse span using the context-based v4 API."""
 
-    def __init__(self, client, trace_id: str, name: str, metadata: dict):
+    def __init__(self, client, name: str, metadata: dict):
         self._client = client
-        self._trace_id = trace_id
         self._name = name
-        self._span_id = None
+        self._span = None
+        self._ctx = None
         try:
-            obs = self._client.start_observation(
-                trace_id=trace_id,
+            self._ctx = self._client.start_as_current_observation(
                 name=name,
+                as_type="span",
                 metadata=metadata,
-                type="span",
             )
-            self._span_id = getattr(obs, "id", None)
-        except Exception:
-            pass
+            self._span = self._ctx.__enter__()
+        except Exception as e:
+            log.warning("langfuse_span_start_failed", name=name, error=str(e))
 
     def generation(self, name: str = "llm-call", model: str = "", input=None, output=None, usage=None, **kwargs):
         try:
-            self._client.start_observation(
-                trace_id=self._trace_id,
-                parent_observation_id=self._span_id,
+            usage_details = None
+            if usage and isinstance(usage, dict):
+                usage_details = {
+                    "input": usage.get("input", 0),
+                    "output": usage.get("output", 0),
+                }
+            gen_ctx = self._client.start_as_current_observation(
                 name=name,
-                type="generation",
+                as_type="generation",
                 model=model,
                 input=str(input)[:2000] if input else None,
                 output=str(output)[:2000] if output else None,
-                usage=usage,
+                usage_details=usage_details,
             )
-        except Exception:
-            pass
+            gen = gen_ctx.__enter__()
+            gen_ctx.__exit__(None, None, None)
+        except Exception as e:
+            log.warning("langfuse_generation_failed", name=name, error=str(e))
         return self
 
     def event(self, name: str, metadata: dict | None = None):
         try:
-            self._client.create_event(
-                trace_id=self._trace_id,
+            obs = self._client.start_observation(
                 name=name,
+                as_type="tool",
                 metadata=metadata or {},
             )
         except Exception:
             pass
 
     def end(self):
-        pass
+        try:
+            if self._ctx:
+                self._ctx.__exit__(None, None, None)
+        except Exception:
+            pass
 
 
 def create_trace(incident_id: str, name: str = "incident-pipeline"):
@@ -125,9 +163,9 @@ def create_trace(incident_id: str, name: str = "incident-pipeline"):
         return _NoOp()
 
     try:
-        trace_id = client.create_trace_id()
-        return TraceWrapper(client, trace_id, name, {"incident_id": incident_id})
-    except Exception:
+        return TraceWrapper(client, name, {"incident_id": incident_id})
+    except Exception as e:
+        log.warning("langfuse_create_trace_failed", error=str(e))
         return _NoOp()
 
 
