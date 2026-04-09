@@ -23,18 +23,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
-from fastapi import Request
-from fastapi.responses import JSONResponse
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    import traceback
-    return JSONResponse(
-        status_code=500,
-        content={"error": str(exc), "type": type(exc).__name__, "trace": traceback.format_exc()[-500:]},
-    )
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -55,31 +43,3 @@ app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 @app.get("/health")
 async def health():
     return {"status": "ok"}
-
-
-@app.get("/debug/pipeline/{incident_id}")
-async def debug_pipeline(incident_id: str):
-    """Temporary diagnostic -- run pipeline synchronously to see errors."""
-    from uuid import UUID
-    from src.db.database import async_session
-    try:
-        from src.agents.orchestrator import run_pipeline
-        async with async_session() as db:
-            await run_pipeline(UUID(incident_id), db)
-        return {"status": "completed"}
-    except Exception as e:
-        import traceback
-        return {"status": "error", "error": str(e), "type": type(e).__name__, "trace": traceback.format_exc()[-1000:]}
-
-
-@app.get("/debug/db")
-async def debug_db():
-    """Temporary diagnostic -- remove before submission."""
-    from sqlalchemy import text
-    from src.db.database import engine
-    try:
-        async with engine.connect() as conn:
-            r = await conn.execute(text("SELECT 1"))
-            return {"db": "ok", "result": r.scalar(), "url_prefix": settings.database_url[:40]}
-    except Exception as e:
-        return {"db": "error", "error": str(e), "type": type(e).__name__, "url_prefix": settings.database_url[:40]}
