@@ -11,6 +11,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [title, setTitle] = useState("");
+  const [affectedArea, setAffectedArea] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -30,10 +31,13 @@ export default function IncidentForm({ onSubmitted }: Props) {
     setError(null);
     setSubmitting(true);
     try {
+      const finalDescription = affectedArea
+        ? `[Affected Area: ${affectedArea}] ${description}`
+        : description;
       const res = await createIncident(
         {
           title,
-          description,
+          description: finalDescription,
           reporter_name: name,
           reporter_email: email,
         },
@@ -104,6 +108,31 @@ export default function IncidentForm({ onSubmitted }: Props) {
           className={inputClasses}
         />
         <p className="mt-1 text-xs text-gray-500">{title.length}/200</p>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-300">
+          Affected Area
+        </label>
+        <select
+          value={affectedArea}
+          onChange={(e) => setAffectedArea(e.target.value)}
+          className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
+        >
+          <option value="">Select affected area...</option>
+          <option>Cart &amp; Checkout</option>
+          <option>Payment Processing</option>
+          <option>Product Catalog &amp; Search</option>
+          <option>Order Management</option>
+          <option>Customer Accounts &amp; Auth</option>
+          <option>Inventory &amp; Stock</option>
+          <option>Fulfillment &amp; Shipping</option>
+          <option>Promotions &amp; Discounts</option>
+          <option>Admin Dashboard</option>
+          <option>Storefront (General)</option>
+          <option>API / Integrations</option>
+          <option>Other</option>
+        </select>
       </div>
 
       <div>
