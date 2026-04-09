@@ -94,6 +94,8 @@ const stepIndex = (status: IncidentStatus): number => {
 export default function StatusTracker({ incidentId, onBack }: Props) {
   const [incident, setIncident] = useState<Incident | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState(false);
   const [similarIncidents, setSimilarIncidents] = useState<
     { id: string; title: string; severity: string; status: string; shared_modules: string[]; created_at: string }[]
   >([]);
@@ -238,14 +240,21 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
           </div>
           <button
             onClick={async () => {
+              setRetrying(true);
+              setRetryError(false);
               try {
                 await retryIncident(incidentId);
-              } catch {}
+              } catch {
+                setRetryError(true);
+              }
+              setRetrying(false);
             }}
-            className="mt-3 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
+            disabled={retrying}
+            className="mt-3 px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white text-sm rounded"
           >
-            Retry Triage
+            {retrying ? "Retrying..." : "Retry Triage"}
           </button>
+          {retryError && <p className="text-xs text-red-400 mt-1">Retry failed. Try again.</p>}
         </div>
       )}
 

@@ -44,10 +44,14 @@ async def check_escalations():
                     sla_minutes=sla_minutes,
                 )
 
+                # Persist severity change first so it's saved regardless of Slack outcome
+                await db.commit()
+
                 try:
                     from src.agents.tools.slack_tool import send_slack_notification
 
-                    send_slack_notification(
+                    await asyncio.to_thread(
+                        send_slack_notification,
                         severity=new_severity,
                         title=f"[ESCALATED] {incident.title}",
                         summary=(
@@ -59,8 +63,6 @@ async def check_escalations():
                     )
                 except Exception as e:
                     log.error("escalation_slack_failed", error=str(e))
-
-        await db.commit()
 
 
 async def escalation_loop():

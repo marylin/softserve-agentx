@@ -144,6 +144,10 @@ async def run_pipeline(incident_id: UUID, db: AsyncSession):
         )
         db.add(routing_model)
 
+        if not routing_result.linear_ticket_id and not routing_result.email_sent:
+            log.warning("routing_partial", incident_id=str(incident_id),
+                msg="Routing completed but no ticket created and no email sent. Check integration credentials.")
+
         incident.status = "routed"
         incident.updated_at = datetime.now(timezone.utc)
         await db.commit()

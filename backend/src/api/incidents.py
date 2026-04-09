@@ -24,15 +24,6 @@ from src.models.schemas import (
 router = APIRouter()
 
 
-def _handle_task_error(task: asyncio.Task):
-    if task.cancelled():
-        return
-    exc = task.exception()
-    if exc:
-        import traceback
-        traceback.print_exception(type(exc), exc, exc.__traceback__)
-
-
 @router.post("/", status_code=201)
 async def create_incident(
     background_tasks: BackgroundTasks,
@@ -73,22 +64,27 @@ async def create_incident(
 
     for f in files:
         if f.size and f.size > 0:
-            file_ext = f.filename.split(".")[-1] if f.filename else "bin"
-            file_path = str(upload_dir / f"{incident.id}_{uuid.uuid4().hex[:8]}.{file_ext}")
-            content = await f.read()
-            with open(file_path, "wb") as fp:
-                fp.write(content)
+            try:
+                file_ext = f.filename.split(".")[-1] if f.filename else "bin"
+                file_path = str(upload_dir / f"{incident.id}_{uuid.uuid4().hex[:8]}.{file_ext}")
+                content = await f.read()
+                with open(file_path, "wb") as fp:
+                    fp.write(content)
 
-            att_type = _classify_file(f.content_type or "", file_ext)
-            attachment = IncidentAttachment(
-                incident_id=incident.id,
-                type=att_type,
-                file_path=file_path,
-                file_size=len(content),
-                mime_type=f.content_type or "application/octet-stream",
-                original_filename=f.filename or "unknown",
-            )
-            db.add(attachment)
+                att_type = _classify_file(f.content_type or "", file_ext)
+                attachment = IncidentAttachment(
+                    incident_id=incident.id,
+                    type=att_type,
+                    file_path=file_path,
+                    file_size=len(content),
+                    mime_type=f.content_type or "application/octet-stream",
+                    original_filename=f.filename or "unknown",
+                )
+                db.add(attachment)
+            except Exception as exc:
+                # Log but don't fail the entire incident
+                import traceback
+                traceback.print_exception(type(exc), exc, exc.__traceback__)
 
     await db.commit()
     await db.refresh(incident)
@@ -119,16 +115,19 @@ async def suggest_description(title: str = Form(""), affected_area: str = Form("
 
     area_context = f" in the {affected_area} area" if affected_area else ""
 
-    response = client.messages.create(
-        model=settings.llm_model,
-        max_tokens=500,
-        messages=[{
-            "role": "user",
-            "content": f"Generate a concise, structured incident report for an e-commerce platform issue. Title: '{title}'{area_context}.\n\nUse this format exactly:\n\n**What happened:**\n[1-2 sentences]\n\n**Steps to reproduce:**\n1. [step]\n2. [step]\n3. [step]\n\n**Expected behavior:**\n[1 sentence]\n\n**Actual behavior:**\n[1 sentence]\n\n**Error messages (if any):**\n[any error text or 'None observed']\n\nBe specific and technical. Do not add any other sections."
-        }]
-    )
-
-    return {"suggestion": response.content[0].text}
+    try:
+        response = client.messages.create(
+            model=settings.llm_model,
+            max_tokens=500,
+            messages=[{
+                "role": "user",
+                "content": f"Generate a concise, structured incident report for an e-commerce platform issue. Title: '{title}'{area_context}.\n\nUse this format exactly:\n\n**What happened:**\n[1-2 sentences]\n\n**Steps to reproduce:**\n1. [step]\n2. [step]\n3. [step]\n\n**Expected behavior:**\n[1 sentence]\n\n**Actual behavior:**\n[1 sentence]\n\n**Error messages (if any):**\n[any error text or 'None observed']\n\nBe specific and technical. Do not add any other sections."
+            }],
+            timeout=30,
+        )
+        return {"suggestion": response.content[0].text}
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"AI suggestion failed: {str(e)}")
 
 
 @router.get("/config/areas")

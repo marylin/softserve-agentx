@@ -70,7 +70,7 @@ async def linear_webhook(
             incident.updated_at = datetime.now(timezone.utc)
 
         routing.resolved_at = datetime.now(timezone.utc)
-        routing.resolution_notified = True
+        routing.resolution_notified = False  # Will set True only after email succeeds
 
         # Load triage data for the resolution email
         await db.refresh(incident, ["triage_result"])
@@ -178,6 +178,7 @@ async def linear_webhook(
 
         # Send resolution email in thread to avoid blocking event loop
         from src.agents.tools.email_tool import send_email
+        email_success = False
         try:
             await asyncio.to_thread(
                 send_email,
@@ -185,7 +186,12 @@ async def linear_webhook(
                 subject=f"[Resolved] {incident.title}",
                 html_body=html_body,
             )
+            email_success = True
         except Exception as e:
             log.error("resolution_email_failed", error=str(e), incident_id=str(incident.id))
+
+        if email_success:
+            routing.resolution_notified = True
+            await db.commit()
 
     return {"status": "resolved"}

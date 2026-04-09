@@ -177,6 +177,6 @@ def run_agent(
         messages.append({"role": "assistant", "content": response.content})
         messages.append({"role": "user", "content": tool_results})
 
-    # Exhausted max iterations -- return whatever text we have
+    # Exhausted max iterations -- raise so the orchestrator marks incident as failed
     log.warning("agent_max_iterations", agent=name, iterations=max_iterations)
-    return "\n".join(text_parts) if text_parts else '{"error": "Agent exceeded maximum iterations"}'
+    raise RuntimeError(f"Agent {name} exceeded maximum iterations ({max_iterations})")
