@@ -58,3 +58,9 @@ export async function getSimilarIncidents(id: string) {
   if (!res.ok) return [];
   return res.json();
 }
+
+export async function retryIncident(id: string) {
+  const res = await fetch(`${API_URL}/incidents/${id}/retry`, { method: "POST" });
+  if (!res.ok) throw new Error("Retry failed");
+  return res.json();
+}

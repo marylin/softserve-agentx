@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
@@ -165,6 +166,37 @@ async def list_incidents(db: AsyncSession = Depends(get_db)):
         )
         for inc in incidents
     ]
+
+
+@router.post("/{incident_id}/retry")
+async def retry_incident(
+    incident_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    """Retry triage for a failed incident."""
+    result = await db.execute(select(Incident).where(Incident.id == incident_id))
+    incident = result.scalar_one_or_none()
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    if incident.status != "failed":
+        raise HTTPException(status_code=400, detail="Only failed incidents can be retried")
+
+    incident.status = "received"
+    incident.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+
+    async def _run():
+        from src.agents.orchestrator import run_pipeline
+        try:
+            async with async_session() as bg_db:
+                await run_pipeline(incident.id, bg_db)
+        except Exception as exc:
+            import traceback
+            traceback.print_exception(type(exc), exc, exc.__traceback__)
+
+    background_tasks.add_task(_run)
+    return {"status": "retrying"}
 
 
 @router.get("/{incident_id}", response_model=IncidentResponse)

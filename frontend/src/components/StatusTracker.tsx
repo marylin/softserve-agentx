@@ -17,7 +17,7 @@ import {
   Clock,
   Link2,
 } from "lucide-react";
-import { getIncident, getSimilarIncidents } from "../lib/api";
+import { getIncident, getSimilarIncidents, retryIncident } from "../lib/api";
 import type { Incident, IncidentStatus } from "../types/incident";
 import SeverityBadge from "./SeverityBadge";
 
@@ -63,6 +63,12 @@ function SlaCountdown({ severity, createdAt }: { severity: string; createdAt: st
         : `SLA: ${formatDuration(remaining)} remaining`}
     </span>
   );
+}
+
+function confidenceLabel(c: number): { text: string; color: string } {
+  if (c >= 0.85) return { text: "High confidence", color: "text-green-400" };
+  if (c >= 0.6) return { text: "Moderate -- review recommended", color: "text-yellow-400" };
+  return { text: "Low -- verify manually", color: "text-red-400" };
 }
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -225,9 +231,21 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
       {/* Failed state */}
       {failed && (
-        <div className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          <XCircle className="w-4 h-4 shrink-0" />
-          Triage failed. The incident could not be processed automatically.
+        <div className="rounded border border-red-500/50 bg-red-500/10 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-red-400">
+            <XCircle className="w-4 h-4 shrink-0" />
+            Triage failed. The incident could not be processed automatically.
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                await retryIncident(incidentId);
+              } catch {}
+            }}
+            className="mt-3 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
+          >
+            Retry Triage
+          </button>
         </div>
       )}
 
@@ -241,9 +259,14 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
           <div className="flex flex-wrap items-center gap-3">
             <SeverityBadge level={incident.triage.severity} />
-            <span className="text-xs text-gray-400">
-              Confidence: {(incident.triage.confidence * 100).toFixed(0)}%
-            </span>
+            {(() => {
+              const cl = confidenceLabel(incident.triage.confidence);
+              return (
+                <span className={`text-xs ${cl.color}`}>
+                  {(incident.triage.confidence * 100).toFixed(0)}% -- {cl.text}
+                </span>
+              );
+            })()}
             <SlaCountdown severity={incident.triage.severity} createdAt={incident.created_at} />
             {(() => {
               const baseInputTokens = 8000;

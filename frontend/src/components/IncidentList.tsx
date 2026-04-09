@@ -4,8 +4,32 @@ import { listIncidents } from "../lib/api";
 import type { IncidentListItem, IncidentStatus, SeverityLevel } from "../types/incident";
 import SeverityBadge from "./SeverityBadge";
 
+const SLA_MINUTES: Record<string, number> = { P1: 15, P2: 60, P3: 240, P4: 1440 };
+
+function formatAge(createdAt: string) {
+  const ms = Date.now() - new Date(createdAt).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ${mins % 60}m`;
+  return `${Math.floor(hours / 24)}d`;
+}
+
+function isSlaBreach(severity: string | null, createdAt: string): boolean {
+  if (!severity) return false;
+  const elapsed = (Date.now() - new Date(createdAt).getTime()) / 60000;
+  return elapsed > (SLA_MINUTES[severity] || 60);
+}
+
+function formatReported(createdAt: string) {
+  const ms = Date.now() - new Date(createdAt).getTime();
+  if (ms < 86400000) return formatAge(createdAt) + " ago";
+  return new Date(createdAt).toLocaleDateString();
+}
+
 interface Props {
   onSelect: (id: string) => void;
+  onReportNew?: () => void;
 }
 
 const statusColors: Record<IncidentStatus, string> = {
@@ -31,7 +55,7 @@ const ALL_STATUSES: IncidentStatus[] = ["received", "triaging", "triaged", "rout
 
 const filterInputClasses = "bg-gray-900 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100";
 
-export default function IncidentList({ onSelect }: Props) {
+export default function IncidentList({ onSelect, onReportNew }: Props) {
   const [incidents, setIncidents] = useState<IncidentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -152,12 +176,20 @@ export default function IncidentList({ onSelect }: Props) {
           <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
         </div>
       ) : incidents.length === 0 ? (
-        <p className="py-10 text-center text-sm text-gray-500">
-          No incidents reported yet.
-        </p>
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-3">No incidents reported yet.</p>
+          {onReportNew && (
+            <button onClick={onReportNew} className="text-orange-400 hover:text-orange-300 text-sm">
+              Report your first incident
+            </button>
+          )}
+        </div>
       ) : filteredIncidents.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-500">
           No incidents match the current filters.
+          <button onClick={() => { setSearchText(""); setSeverityFilter(""); setStatusFilter(""); }} className="text-orange-400 hover:text-orange-300 text-sm ml-2">
+            Clear filters
+          </button>
         </p>
       ) : (
         <div className="overflow-x-auto rounded border border-gray-800">
@@ -168,6 +200,7 @@ export default function IncidentList({ onSelect }: Props) {
                 <th className="px-4 py-3 font-medium">Reporter</th>
                 <th className="px-4 py-3 font-medium">Severity</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Age</th>
                 <th className="px-4 py-3 font-medium">Reported</th>
               </tr>
             </thead>
@@ -192,8 +225,17 @@ export default function IncidentList({ onSelect }: Props) {
                       {statusLabel[inc.status]}
                     </span>
                   </td>
+                  <td className="px-4 py-3">
+                    <span className={
+                      inc.status === "resolved" ? "text-green-400" :
+                      (inc.status !== "failed" && isSlaBreach(inc.severity, inc.created_at)) ? "text-red-400" :
+                      "text-gray-500"
+                    }>
+                      {formatAge(inc.created_at)}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-gray-500">
-                    {new Date(inc.created_at).toLocaleDateString()}
+                    {formatReported(inc.created_at)}
                   </td>
                 </tr>
               ))}

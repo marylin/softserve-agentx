@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Shield, FileText } from "lucide-react";
 import IncidentForm from "./components/IncidentForm";
 import IncidentList from "./components/IncidentList";
@@ -11,6 +11,24 @@ type View = "form" | "list" | "detail" | "metrics" | "health";
 export default function App() {
   const [view, setView] = useState<View>("form");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [alertCounts, setAlertCounts] = useState({ open: 0, critical: 0 });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/metrics/`);
+        const data = await res.json();
+        const open = Object.entries(data.status_distribution)
+          .filter(([k]) => !["resolved", "failed"].includes(k))
+          .reduce((sum, [, v]) => sum + (v as number), 0);
+        const critical = (data.severity_distribution?.P1 || 0);
+        setAlertCounts({ open, critical });
+      } catch {}
+    };
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -35,13 +53,18 @@ export default function App() {
             </button>
             <button
               onClick={() => setView("list")}
-              className={`px-3 py-1.5 rounded text-sm ${
+              className={`relative px-3 py-1.5 rounded text-sm ${
                 view === "list"
                   ? "bg-orange-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
-              Dashboard
+              Incidents
+              {alertCounts.open > 0 && (
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {alertCounts.open}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setView("metrics")}
@@ -55,13 +78,16 @@ export default function App() {
             </button>
             <button
               onClick={() => setView("health")}
-              className={`px-3 py-1.5 rounded text-sm ${
+              className={`relative px-3 py-1.5 rounded text-sm ${
                 view === "health"
                   ? "bg-orange-600 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
               Health
+              {alertCounts.critical > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-2 h-2" />
+              )}
             </button>
             <a
               href={`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/docs`}
@@ -90,6 +116,7 @@ export default function App() {
               setSelectedId(id);
               setView("detail");
             }}
+            onReportNew={() => setView("form")}
           />
         )}
         {view === "metrics" && <MetricsDashboard />}

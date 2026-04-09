@@ -1,5 +1,12 @@
 import type { SeverityLevel } from "../types/incident";
 
+const SLA_TOOLTIPS: Record<string, string> = {
+  P1: "SLA: 15 min response",
+  P2: "SLA: 1 hour response",
+  P3: "SLA: 4 hour response",
+  P4: "SLA: 24 hour response",
+};
+
 const config: Record<SeverityLevel, { label: string; classes: string }> = {
   P1: {
     label: "Critical",
@@ -27,6 +34,7 @@ export default function SeverityBadge({ level }: { level: SeverityLevel }) {
   const { label, classes } = config[level];
   return (
     <span
+      title={SLA_TOOLTIPS[level] || ""}
       className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium ${classes}`}
     >
       {level} {label}
