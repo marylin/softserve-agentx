@@ -18,6 +18,8 @@ import { getIncident } from "../lib/api";
 import type { Incident, IncidentStatus } from "../types/incident";
 import SeverityBadge from "./SeverityBadge";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 interface Props {
   incidentId: string;
   onBack: () => void;
@@ -281,19 +283,45 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
             <h4 className="mb-1 text-xs font-medium text-gray-400 uppercase tracking-wide">
               Attachments
             </h4>
-            <ul className="space-y-1">
-              {incident.attachments.map((att) => (
-                <li
-                  key={att.id}
-                  className="flex items-center gap-2 text-xs text-gray-400"
-                >
-                  <Paperclip className="w-3 h-3" />
-                  {att.original_filename}{" "}
-                  <span className="text-gray-600">
-                    ({(att.file_size / 1024).toFixed(1)} KB)
-                  </span>
-                </li>
-              ))}
+            <ul className="space-y-3">
+              {incident.attachments.map((att) => {
+                const url = `${API_URL}/incidents/${incident.id}/attachments/${att.id}`;
+                return (
+                  <li key={att.id}>
+                    {att.type === "image" ? (
+                      <a href={url} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={url}
+                          alt={att.original_filename}
+                          className="max-w-xs rounded border border-gray-700"
+                        />
+                        <span className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+                          <Paperclip className="w-3 h-3" />
+                          {att.original_filename}{" "}
+                          <span className="text-gray-600">
+                            ({(att.file_size / 1024).toFixed(1)} KB)
+                          </span>
+                        </span>
+                      </a>
+                    ) : (
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <Paperclip className="w-3 h-3" />
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-orange-400 hover:underline"
+                        >
+                          {att.original_filename}
+                        </a>
+                        <span className="text-gray-600">
+                          ({att.type}, {(att.file_size / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

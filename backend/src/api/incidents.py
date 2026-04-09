@@ -188,6 +188,30 @@ async def get_incident(incident_id: uuid.UUID, db: AsyncSession = Depends(get_db
     )
 
 
+@router.get("/{incident_id}/attachments/{attachment_id}")
+async def get_attachment(
+    incident_id: uuid.UUID,
+    attachment_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(IncidentAttachment).where(
+            IncidentAttachment.id == attachment_id,
+            IncidentAttachment.incident_id == incident_id,
+        )
+    )
+    attachment = result.scalar_one_or_none()
+    if not attachment:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+    from fastapi.responses import FileResponse
+
+    return FileResponse(
+        attachment.file_path,
+        media_type=attachment.mime_type,
+        filename=attachment.original_filename,
+    )
+
+
 def _classify_file(content_type: str, ext: str) -> str:
     if content_type.startswith("image/") or ext in ("png", "jpg", "jpeg", "webp"):
         return "image"
