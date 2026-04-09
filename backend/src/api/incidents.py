@@ -237,6 +237,45 @@ async def get_attachment(
     )
 
 
+@router.get("/{incident_id}/similar")
+async def get_similar_incidents(incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """Find incidents with overlapping affected modules."""
+    from src.models.incident import TriageResultModel
+
+    # Get this incident's triage
+    result = await db.execute(
+        select(TriageResultModel).where(TriageResultModel.incident_id == incident_id)
+    )
+    triage = result.scalar_one_or_none()
+    if not triage or not triage.affected_modules:
+        return []
+
+    # Find other incidents with same modules
+    all_triages = await db.execute(
+        select(TriageResultModel, Incident)
+        .join(Incident)
+        .where(TriageResultModel.incident_id != incident_id)
+        .order_by(Incident.created_at.desc())
+        .limit(20)
+    )
+
+    similar = []
+    my_modules = set(triage.affected_modules)
+    for t, inc in all_triages.all():
+        overlap = my_modules & set(t.affected_modules or [])
+        if overlap:
+            similar.append({
+                "id": str(inc.id),
+                "title": inc.title,
+                "severity": t.severity,
+                "status": inc.status,
+                "shared_modules": list(overlap),
+                "created_at": inc.created_at.isoformat(),
+            })
+
+    return similar[:5]
+
+
 def _classify_file(content_type: str, ext: str) -> str:
     if content_type.startswith("image/") or ext in ("png", "jpg", "jpeg", "webp"):
         return "image"

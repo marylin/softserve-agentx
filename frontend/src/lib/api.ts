@@ -52,3 +52,9 @@ export async function listIncidents() {
   if (!res.ok) throw new Error(`Failed to list incidents: ${res.statusText}`);
   return res.json();
 }
+
+export async function getSimilarIncidents(id: string) {
+  const res = await fetch(`${API_URL}/incidents/${id}/similar`);
+  if (!res.ok) return [];
+  return res.json();
+}

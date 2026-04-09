@@ -14,8 +14,9 @@ import {
   Layers,
   Paperclip,
   Clock,
+  Link2,
 } from "lucide-react";
-import { getIncident } from "../lib/api";
+import { getIncident, getSimilarIncidents } from "../lib/api";
 import type { Incident, IncidentStatus } from "../types/incident";
 import SeverityBadge from "./SeverityBadge";
 
@@ -86,6 +87,10 @@ const stepIndex = (status: IncidentStatus): number => {
 export default function StatusTracker({ incidentId, onBack }: Props) {
   const [incident, setIncident] = useState<Incident | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [similarIncidents, setSimilarIncidents] = useState<
+    { id: string; title: string; severity: string; status: string; shared_modules: string[]; created_at: string }[]
+  >([]);
+  const similarFetched = useRef(false);
 
   const poll = useCallback(async () => {
     try {
@@ -102,6 +107,13 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
     const id = setInterval(poll, 3000);
     return () => clearInterval(id);
   }, [poll]);
+
+  useEffect(() => {
+    if (incident?.triage && !similarFetched.current) {
+      similarFetched.current = true;
+      getSimilarIncidents(incidentId).then(setSimilarIncidents).catch(() => {});
+    }
+  }, [incident?.triage, incidentId]);
 
   if (error && !incident) {
     return (
@@ -270,6 +282,38 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
               </ol>
             </div>
           )}
+        </section>
+      )}
+
+      {/* Similar Incidents */}
+      {similarIncidents.length > 0 && (
+        <section className="space-y-3 rounded border border-gray-800 bg-gray-900/50 p-5">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+            <Link2 className="w-4 h-4 text-orange-500" />
+            Related Incidents
+          </h3>
+          <ul className="space-y-2">
+            {similarIncidents.map((sim) => (
+              <li
+                key={sim.id}
+                className="flex flex-wrap items-center gap-2 rounded bg-gray-800/60 px-3 py-2"
+              >
+                <span className="text-sm text-gray-200 font-medium">{sim.title}</span>
+                <SeverityBadge level={sim.severity as "P1" | "P2" | "P3" | "P4"} />
+                <span className="rounded bg-gray-700 px-1.5 py-0.5 text-xs text-gray-400 capitalize">
+                  {sim.status}
+                </span>
+                {sim.shared_modules.map((mod) => (
+                  <span
+                    key={mod}
+                    className="rounded bg-orange-500/10 border border-orange-500/30 px-1.5 py-0.5 text-xs text-orange-400"
+                  >
+                    {mod}
+                  </span>
+                ))}
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
