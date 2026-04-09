@@ -29,6 +29,17 @@ const SEVERITY_COLORS: Record<string, string> = {
   P4: "bg-gray-600",
 };
 
+function Tooltip({ text, children }: { text: string; children: React.ReactNode }) {
+  return (
+    <div className="relative group">
+      {children}
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-gray-200 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+        {text}
+      </div>
+    </div>
+  );
+}
+
 export default function MetricsDashboard() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,30 +98,38 @@ export default function MetricsDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5" title="Total number of incidents across all statuses">
-          <p className="text-sm text-gray-400">Total Incidents</p>
-          <p className="text-3xl font-bold text-gray-100 mt-1">
-            {metrics.total_incidents}
-          </p>
-        </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5" title="Average AI confidence score across all triaged incidents (higher = more reliable severity)">
-          <p className="text-sm text-gray-400">Avg Confidence</p>
-          <p className="text-3xl font-bold text-gray-100 mt-1">
-            {(metrics.average_confidence * 100).toFixed(1)}%
-          </p>
-        </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5" title="Percentage of incidents that reached resolved status">
-          <p className="text-sm text-gray-400">Resolution Rate</p>
-          <p className="text-3xl font-bold text-gray-100 mt-1">
-            {(metrics.resolution_rate * 100).toFixed(1)}%
-          </p>
-        </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-5" title="Percentage of incidents where the triage pipeline failed">
-          <p className="text-sm text-gray-400">Failure Rate</p>
-          <p className="text-3xl font-bold text-gray-100 mt-1">
-            {(metrics.failure_rate * 100).toFixed(1)}%
-          </p>
-        </div>
+        <Tooltip text="Total incidents across all statuses">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+            <p className="text-sm text-gray-400">Total Incidents</p>
+            <p className="text-3xl font-bold text-gray-100 mt-1">
+              {metrics.total_incidents}
+            </p>
+          </div>
+        </Tooltip>
+        <Tooltip text="Average AI confidence score across all triaged incidents (higher = more reliable severity)">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+            <p className="text-sm text-gray-400">Avg Confidence</p>
+            <p className="text-3xl font-bold text-gray-100 mt-1">
+              {(metrics.average_confidence * 100).toFixed(1)}%
+            </p>
+          </div>
+        </Tooltip>
+        <Tooltip text="Percentage of incidents that reached resolved status">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+            <p className="text-sm text-gray-400">Resolution Rate</p>
+            <p className="text-3xl font-bold text-gray-100 mt-1">
+              {(metrics.resolution_rate * 100).toFixed(1)}%
+            </p>
+          </div>
+        </Tooltip>
+        <Tooltip text="Percentage of incidents where the triage pipeline failed">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+            <p className="text-sm text-gray-400">Failure Rate</p>
+            <p className="text-3xl font-bold text-gray-100 mt-1">
+              {(metrics.failure_rate * 100).toFixed(1)}%
+            </p>
+          </div>
+        </Tooltip>
       </div>
 
       {/* Severity Distribution */}
@@ -123,21 +142,22 @@ export default function MetricsDashboard() {
             const count = metrics.severity_distribution[sev] || 0;
             const pct = severityTotal > 0 ? (count / severityTotal) * 100 : 0;
             return (
-              <div key={sev} className="flex items-center gap-3" title={`${sev}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}%)`}>
-                <span className="w-8 text-sm font-medium text-gray-300">
-                  {sev}
-                </span>
-                <div className="flex-1 h-6 bg-gray-800 rounded overflow-hidden">
-                  <div
-                    className={`h-full ${SEVERITY_COLORS[sev]} rounded`}
-                    style={{ width: `${pct}%` }}
-                    title={`${sev}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}% of total)`}
-                  />
+              <Tooltip key={sev} text={`${sev}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}% of total)`}>
+                <div className="flex items-center gap-3">
+                  <span className="w-8 text-sm font-medium text-gray-300">
+                    {sev}
+                  </span>
+                  <div className="flex-1 h-6 bg-gray-800 rounded overflow-hidden">
+                    <div
+                      className={`h-full ${SEVERITY_COLORS[sev]} rounded`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="w-8 text-sm text-gray-400 text-right">
+                    {count}
+                  </span>
                 </div>
-                <span className="w-8 text-sm text-gray-400 text-right">
-                  {count}
-                </span>
-              </div>
+              </Tooltip>
             );
           })}
         </div>
@@ -156,17 +176,18 @@ export default function MetricsDashboard() {
                 const total = Object.values(metrics.component_distribution).reduce((s, n) => s + n, 0);
                 const pct = total > 0 ? (count / total) * 100 : 0;
                 return (
-                  <div key={component} className="flex items-center gap-3" title={`${component}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}%)`}>
-                    <span className="text-sm text-gray-300 w-48 truncate">{component}</span>
-                    <div className="flex-1 h-6 bg-gray-800 rounded overflow-hidden">
-                      <div
-                        className="h-full bg-orange-600 rounded"
-                        style={{ width: `${pct}%` }}
-                        title={`${component}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}% of total)`}
-                      />
+                  <Tooltip key={component} text={`${component}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}% of total)`}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-300 w-48 truncate">{component}</span>
+                      <div className="flex-1 h-6 bg-gray-800 rounded overflow-hidden">
+                        <div
+                          className="h-full bg-orange-600 rounded"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="w-8 text-sm text-gray-400 text-right">{count}</span>
                     </div>
-                    <span className="w-8 text-sm text-gray-400 text-right">{count}</span>
-                  </div>
+                  </Tooltip>
                 );
               })}
           </div>
@@ -183,13 +204,15 @@ export default function MetricsDashboard() {
             (status) => {
               const count = metrics.status_distribution[status] || 0;
               return (
-                <div key={status} className="flex items-center gap-3" title={`${count} incident${count !== 1 ? "s" : ""} in ${status} status`}>
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full ${STATUS_COLORS[status]}`}
-                  />
-                  <span className="text-sm text-gray-300 w-24">{status}</span>
-                  <span className="text-sm text-gray-400">{count}</span>
-                </div>
+                <Tooltip key={status} text={`${count} incident${count !== 1 ? "s" : ""} in ${status} status`}>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full ${STATUS_COLORS[status]}`}
+                    />
+                    <span className="text-sm text-gray-300 w-24">{status}</span>
+                    <span className="text-sm text-gray-400">{count}</span>
+                  </div>
+                </Tooltip>
               );
             }
           )}
