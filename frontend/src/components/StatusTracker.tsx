@@ -91,10 +91,31 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
     { id: string; title: string; severity: string; status: string; shared_modules: string[]; created_at: string }[]
   >([]);
   const similarFetched = useRef(false);
+  const prevStatusRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
 
   const poll = useCallback(async () => {
     try {
       const data = await getIncident(incidentId);
+      if (prevStatusRef.current && prevStatusRef.current !== data.status) {
+        if (data.status === "triaged" && data.triage && Notification.permission === "granted") {
+          new Notification("Incident Triaged", {
+            body: `${data.triage.severity} - ${data.title}\nConfidence: ${(data.triage.confidence * 100).toFixed(0)}%`,
+            icon: "/favicon.ico",
+          });
+        } else if (data.status === "routed" && data.routing && Notification.permission === "granted") {
+          new Notification("Incident Routed", {
+            body: `${data.title}\nTicket: ${data.routing.linear_ticket_id || "Created"}`,
+            icon: "/favicon.ico",
+          });
+        }
+      }
+      prevStatusRef.current = data.status;
       setIncident(data);
       setError(null);
     } catch (err) {
