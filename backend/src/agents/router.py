@@ -1,0 +1,105 @@
+import json
+import re
+
+from src.agents.base import run_agent
+from src.agents.tools.email_tool import EMAIL_TOOL_HANDLERS, EMAIL_TOOLS
+from src.agents.tools.linear_tool import LINEAR_TOOL_HANDLERS, LINEAR_TOOLS
+from src.agents.tools.slack_tool import SLACK_TOOL_HANDLERS, SLACK_TOOLS
+from src.models.schemas import RoutingResult, TriageResult
+from src.observability.logging import get_logger
+
+log = get_logger("agents.router")
+
+SYSTEM_PROMPT = """You are an SRE Routing Agent. After an incident has been triaged, you handle:
+1. Creating a Linear ticket to track the issue
+2. Sending Slack notifications to the appropriate channel
+3. Sending email notifications to the reporter and team
+
+ROUTING RULES:
+- ALWAYS create a Linear ticket first
+- After creating the ticket, send Slack and email notifications that include the ticket URL
+- P1 incidents: Slack goes to critical channel, email the reporter AND team
+- P2-P4 incidents: Slack goes to general channel, email the reporter
+
+EXECUTION ORDER:
+1. Call create_linear_ticket with the incident details
+2. Call send_slack_notification with the ticket URL from step 1
+3. Call send_email to notify the reporter (include ticket URL)
+4. For P1: also send a second email to the on-call team
+
+After all actions, output a JSON summary:
+{
+    "linear_ticket_id": "TEAM-123",
+    "linear_ticket_url": "https://linear.app/...",
+    "slack_sent": true,
+    "slack_message_ts": null,
+    "email_sent": true
+}
+
+If any tool returns a "skipped" status, note it but continue with other tools."""
+
+
+def run_router_agent(
+    triage_result: TriageResult,
+    incident_title: str,
+    incident_description: str,
+    reporter_email: str,
+    reporter_name: str,
+    trace_span=None,
+) -> RoutingResult:
+    """Run the router agent to create tickets and send notifications."""
+    # Combine all tools
+    all_tools = LINEAR_TOOLS + SLACK_TOOLS + EMAIL_TOOLS
+    all_handlers = {**LINEAR_TOOL_HANDLERS, **SLACK_TOOL_HANDLERS, **EMAIL_TOOL_HANDLERS}
+
+    severity = triage_result.severity.value
+    runbook = "\n".join(f"- {step}" for step in triage_result.runbook_steps)
+    modules = ", ".join(triage_result.affected_modules) if triage_result.affected_modules else "unknown"
+
+    message = (
+        f"Route this triaged incident:\n\n"
+        f"Title: {incident_title}\n"
+        f"Severity: {severity}\n"
+        f"Summary: {triage_result.summary}\n"
+        f"Affected Modules: {modules}\n"
+        f"Confidence: {triage_result.confidence}\n\n"
+        f"Runbook Steps:\n{runbook}\n\n"
+        f"Reporter: {reporter_name} <{reporter_email}>\n\n"
+        f"Description:\n{incident_description[:2000]}"
+    )
+
+    raw = run_agent(
+        name="router",
+        system_prompt=SYSTEM_PROMPT,
+        user_message=message,
+        tools=all_tools,
+        tool_handlers=all_handlers,
+        trace_span=trace_span,
+    )
+
+    return _parse_router_response(raw)
+
+
+def _parse_router_response(raw: str) -> RoutingResult:
+    """Parse routing agent response into RoutingResult."""
+    json_match = re.search(r"\{[\s\S]*\}", raw)
+    if json_match:
+        try:
+            data = json.loads(json_match.group())
+            return RoutingResult(
+                linear_ticket_id=data.get("linear_ticket_id", ""),
+                linear_ticket_url=data.get("linear_ticket_url", ""),
+                slack_message_ts=data.get("slack_message_ts") or data.get("message_ts"),
+                email_sent=bool(data.get("email_sent", False)),
+            )
+        except (json.JSONDecodeError, ValueError, KeyError) as exc:
+            log.warning("router_json_parse_failed", error=str(exc))
+
+    # Fallback
+    log.warning("router_fallback", raw_length=len(raw))
+    return RoutingResult(
+        linear_ticket_id="",
+        linear_ticket_url="",
+        slack_message_ts=None,
+        email_sent=False,
+    )
