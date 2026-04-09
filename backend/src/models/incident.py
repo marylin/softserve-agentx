@@ -33,7 +33,9 @@ class Incident(Base):
     )
 
     attachments: Mapped[list["IncidentAttachment"]] = relationship(back_populates="incident")
-    triage_result: Mapped["TriageResultModel | None"] = relationship(back_populates="incident", uselist=False)
+    triage_result: Mapped["TriageResultModel | None"] = relationship(
+        back_populates="incident", uselist=False, foreign_keys="[TriageResultModel.incident_id]"
+    )
     routing_result: Mapped["RoutingResultModel | None"] = relationship(back_populates="incident", uselist=False)
 
 
@@ -76,7 +78,9 @@ class TriageResultModel(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
-    incident: Mapped["Incident"] = relationship(back_populates="triage_result")
+    incident: Mapped["Incident"] = relationship(
+        back_populates="triage_result", foreign_keys=[incident_id]
+    )
 
 
 class RoutingResultModel(Base):
