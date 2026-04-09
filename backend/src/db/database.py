@@ -16,10 +16,12 @@ def _build_engine():
             connect_args={"check_same_thread": False},
         )
 
-    # asyncpg doesn't support sslmode query param -- convert to ssl context
-    if "sslmode=" in url:
-        url = url.split("?")[0]
+    # asyncpg doesn't support sslmode/channel_binding query params -- strip them
+    # and use SSL context directly
+    if "?" in url:
+        base_url = url.split("?")[0]
         connect_args["ssl"] = ssl.create_default_context()
+        url = base_url
     elif "neon.tech" in url or "supabase" in url:
         connect_args["ssl"] = ssl.create_default_context()
 
