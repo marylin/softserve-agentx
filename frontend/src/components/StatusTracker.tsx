@@ -192,7 +192,9 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       <div className="flex items-center gap-2">
         {STEPS.map((step, i) => {
           const done = !failed && current >= i;
-          const active = !failed && current === i;
+          // Spinner shows on the NEXT step after current (the one being worked on)
+          // e.g., status="triaging" -> spinner on "Analyzing" (i=1), check on "Received" (i=0)
+          const isInProgress = !failed && !terminal && i === current + 1;
           return (
             <div key={step.key} className="flex items-center gap-2">
               {i > 0 && (
@@ -204,11 +206,9 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                 {failed && i === 0 ? (
                   <XCircle className="w-5 h-5 text-red-500" />
                 ) : done ? (
-                  active && !terminal ? (
-                    <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
-                  ) : (
-                    <CheckCircle2 className="w-5 h-5 text-orange-500" />
-                  )
+                  <CheckCircle2 className="w-5 h-5 text-orange-500" />
+                ) : isInProgress ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
                 ) : (
                   <Circle className="w-5 h-5 text-gray-600" />
                 )}
