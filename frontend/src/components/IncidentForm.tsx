@@ -123,7 +123,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
       <h2 className="text-lg font-semibold text-gray-100">Report an Incident</h2>
 
       {error && (
-        <div className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div role="alert" className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
           {error}
         </div>

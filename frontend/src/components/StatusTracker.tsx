@@ -156,7 +156,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
         >
           <ArrowLeft className="w-4 h-4" /> Back to incidents
         </button>
-        <div className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div role="alert" className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           <XCircle className="w-4 h-4 shrink-0" />
           {error}
         </div>
@@ -202,9 +202,14 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
           return (
             <div key={step.key} className="flex items-center gap-2">
               {i > 0 && (
-                <div
-                  className={`hidden sm:block h-px w-6 ${done ? "bg-indigo-500" : "bg-gray-700"}`}
-                />
+                <>
+                  <div
+                    className={`sm:hidden w-px h-4 ml-2.5 ${done ? "bg-indigo-500" : "bg-gray-700"}`}
+                  />
+                  <div
+                    className={`hidden sm:block h-px w-6 ${done ? "bg-indigo-500" : "bg-gray-700"}`}
+                  />
+                </>
               )}
               <div className="flex items-center gap-1.5 transition-all duration-200">
                 {failed && i === 0 ? (

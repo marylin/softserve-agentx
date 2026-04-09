@@ -16,7 +16,7 @@ const config: Record<SeverityLevel, { label: string; classes: string }> = {
   P2: {
     label: "High",
     classes:
-      "border-orange-500/50 bg-orange-500/10 text-orange-400",
+      "border-amber-500/50 bg-amber-500/10 text-amber-400",
   },
   P3: {
     label: "Medium",

@@ -33,7 +33,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const SEVERITY_COLORS: Record<string, string> = {
   P1: "bg-red-600",
-  P2: "bg-orange-600",
+  P2: "bg-amber-600",
   P3: "bg-yellow-600",
   P4: "bg-gray-600",
 };

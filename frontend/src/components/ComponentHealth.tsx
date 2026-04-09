@@ -58,8 +58,8 @@ const STATUS_CONFIG: Record<
   },
   impacted: {
     label: "Impacted",
-    textColor: "text-orange-400",
-    dotColor: "bg-orange-400",
+    textColor: "text-amber-400",
+    dotColor: "bg-amber-400",
   },
   critical: {
     label: "Critical",
