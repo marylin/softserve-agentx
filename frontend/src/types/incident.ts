@@ -57,6 +57,7 @@ export interface IncidentListItem {
   id: string;
   status: IncidentStatus;
   title: string;
+  description: string;
   reporter_name: string;
   severity: SeverityLevel | null;
   created_at: string;

@@ -144,6 +144,7 @@ async def list_incidents(db: AsyncSession = Depends(get_db)):
             id=inc.id,
             status=IncidentStatus(inc.status),
             title=inc.title,
+            description=inc.description,
             reporter_name=inc.reporter_name,
             severity=inc.triage_result.severity if inc.triage_result else None,
             created_at=inc.created_at,

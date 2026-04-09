@@ -3,9 +3,10 @@ import { Shield } from "lucide-react";
 import IncidentForm from "./components/IncidentForm";
 import IncidentList from "./components/IncidentList";
 import MetricsDashboard from "./components/MetricsDashboard";
+import ComponentHealth from "./components/ComponentHealth";
 import StatusTracker from "./components/StatusTracker";
 
-type View = "form" | "list" | "detail" | "metrics";
+type View = "form" | "list" | "detail" | "metrics" | "health";
 
 export default function App() {
   const [view, setView] = useState<View>("form");
@@ -52,6 +53,16 @@ export default function App() {
             >
               Metrics
             </button>
+            <button
+              onClick={() => setView("health")}
+              className={`px-3 py-1.5 rounded text-sm ${
+                view === "health"
+                  ? "bg-orange-600 text-white"
+                  : "text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              Health
+            </button>
           </nav>
         </div>
       </header>
@@ -73,6 +84,7 @@ export default function App() {
           />
         )}
         {view === "metrics" && <MetricsDashboard />}
+        {view === "health" && <ComponentHealth />}
         {view === "detail" && selectedId && (
           <StatusTracker
             incidentId={selectedId}

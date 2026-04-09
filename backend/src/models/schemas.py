@@ -81,6 +81,7 @@ class IncidentListItem(BaseModel):
     id: UUID
     status: IncidentStatus
     title: str
+    description: str
     reporter_name: str
     severity: SeverityLevel | None = None
     created_at: datetime
