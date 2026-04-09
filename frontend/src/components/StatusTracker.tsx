@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   Circle,
+  Coins,
   Loader2,
   XCircle,
   ExternalLink,
@@ -244,6 +245,18 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
               Confidence: {(incident.triage.confidence * 100).toFixed(0)}%
             </span>
             <SlaCountdown severity={incident.triage.severity} createdAt={incident.created_at} />
+            {(() => {
+              const baseInputTokens = 8000;
+              const baseOutputTokens = 1700;
+              const imageTokens = (incident.attachments?.filter(a => a.type === "image").length || 0) * 1500;
+              const totalCost = ((baseInputTokens + imageTokens) * 3 + baseOutputTokens * 15) / 1_000_000;
+              return (
+                <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                  <Coins className="w-3 h-3" />
+                  Est. cost: ~${totalCost.toFixed(2)}
+                </span>
+              );
+            })()}
           </div>
 
           <div>
