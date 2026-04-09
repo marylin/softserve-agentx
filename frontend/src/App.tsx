@@ -8,9 +8,20 @@ import StatusTracker from "./components/StatusTracker";
 
 type View = "form" | "list" | "detail" | "metrics" | "health";
 
+function parseRoute(): { view: View; selectedId: string | null } {
+  const path = window.location.pathname;
+  const params = new URLSearchParams(window.location.search);
+  if (path === "/metrics") return { view: "metrics", selectedId: null };
+  if (path === "/health") return { view: "health", selectedId: null };
+  if (path === "/incidents" && params.get("id")) return { view: "detail", selectedId: params.get("id") };
+  if (path === "/incidents") return { view: "list", selectedId: null };
+  return { view: "form", selectedId: null };
+}
+
 export default function App() {
-  const [view, setView] = useState<View>("form");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const initial = parseRoute();
+  const [view, setView] = useState<View>(initial.view);
+  const [selectedId, setSelectedId] = useState<string | null>(initial.selectedId);
   const [alertCounts, setAlertCounts] = useState({ open: 0, critical: 0 });
 
   useEffect(() => {
@@ -30,6 +41,27 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const navigate = (newView: View, id: string | null = null) => {
+    setView(newView);
+    setSelectedId(id);
+    let path = "/";
+    if (newView === "list") path = "/incidents";
+    if (newView === "detail" && id) path = `/incidents?id=${id}`;
+    if (newView === "metrics") path = "/metrics";
+    if (newView === "health") path = "/health";
+    window.history.pushState({ view: newView, id }, "", path);
+  };
+
+  useEffect(() => {
+    const handlePop = () => {
+      const route = parseRoute();
+      setView(route.view);
+      setSelectedId(route.selectedId);
+    };
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-950">
       <header className="border-b border-gray-800 px-6 py-4">
@@ -42,7 +74,7 @@ export default function App() {
           </div>
           <nav className="flex gap-4">
             <button
-              onClick={() => setView("form")}
+              onClick={() => navigate("form")}
               className={`px-3 py-1.5 rounded text-sm ${
                 view === "form"
                   ? "bg-orange-600 text-white"
@@ -52,7 +84,7 @@ export default function App() {
               Report Incident
             </button>
             <button
-              onClick={() => setView("list")}
+              onClick={() => navigate("list")}
               className={`relative px-3 py-1.5 rounded text-sm ${
                 view === "list"
                   ? "bg-orange-600 text-white"
@@ -67,7 +99,7 @@ export default function App() {
               )}
             </button>
             <button
-              onClick={() => setView("metrics")}
+              onClick={() => navigate("metrics")}
               className={`px-3 py-1.5 rounded text-sm ${
                 view === "metrics"
                   ? "bg-orange-600 text-white"
@@ -77,7 +109,7 @@ export default function App() {
               Metrics
             </button>
             <button
-              onClick={() => setView("health")}
+              onClick={() => navigate("health")}
               className={`relative px-3 py-1.5 rounded text-sm ${
                 view === "health"
                   ? "bg-orange-600 text-white"
@@ -104,19 +136,13 @@ export default function App() {
       <main className="max-w-5xl mx-auto p-6">
         {view === "form" && (
           <IncidentForm
-            onSubmitted={(id) => {
-              setSelectedId(id);
-              setView("detail");
-            }}
+            onSubmitted={(id) => navigate("detail", id)}
           />
         )}
         {view === "list" && (
           <IncidentList
-            onSelect={(id) => {
-              setSelectedId(id);
-              setView("detail");
-            }}
-            onReportNew={() => setView("form")}
+            onSelect={(id) => navigate("detail", id)}
+            onReportNew={() => navigate("form")}
           />
         )}
         {view === "metrics" && <MetricsDashboard />}
@@ -124,7 +150,7 @@ export default function App() {
         {view === "detail" && selectedId && (
           <StatusTracker
             incidentId={selectedId}
-            onBack={() => setView("list")}
+            onBack={() => navigate("list")}
           />
         )}
       </main>
