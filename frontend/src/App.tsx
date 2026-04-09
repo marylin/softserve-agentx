@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield } from "lucide-react";
+import { Shield, FileText } from "lucide-react";
 import IncidentForm from "./components/IncidentForm";
 import IncidentList from "./components/IncidentList";
 import MetricsDashboard from "./components/MetricsDashboard";
@@ -63,6 +63,15 @@ export default function App() {
             >
               Health
             </button>
+            <a
+              href={`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/docs`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-gray-300 text-sm flex items-center gap-1"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              API
+            </a>
           </nav>
         </div>
       </header>
