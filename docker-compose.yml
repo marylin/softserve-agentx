@@ -1,0 +1,101 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - LLM_PROVIDER=${LLM_PROVIDER:-anthropic}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-anthropic/claude-sonnet-4}
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-true}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - LINEAR_API_KEY=${LINEAR_API_KEY:-}
+      - LINEAR_TEAM_ID=${LINEAR_TEAM_ID:-}
+      - LINEAR_WEBHOOK_SECRET=${LINEAR_WEBHOOK_SECRET:-}
+      - SLACK_WEBHOOK_CRITICAL=${SLACK_WEBHOOK_CRITICAL:-}
+      - SLACK_WEBHOOK_GENERAL=${SLACK_WEBHOOK_GENERAL:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-incidents@example.com}
+      - RESEND_TEAM_EMAIL=${RESEND_TEAM_EMAIL:-oncall@example.com}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - UPLOAD_DIR=/app/uploads
+      - MEDUSA_REPO_PATH=/app/medusa-subset
+      - KNOWLEDGE_BASE_PATH=/app/knowledge-base
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-agentx}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-agentx}
+      - POSTGRES_DB=${POSTGRES_DB:-agentx}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-agentx}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Langfuse self-hosted (optional -- use Langfuse Cloud by default)
+  # Activate with: docker compose --profile self-hosted up --build
+  langfuse:
+    image: langfuse/langfuse:2.95.1
+    ports:
+      - "3000:3000"
+    profiles: ["self-hosted"]
+    environment:
+      - DATABASE_URL=${LANGFUSE_DATABASE_URL}
+      - NEXTAUTH_SECRET=${LANGFUSE_NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${LANGFUSE_NEXTAUTH_URL}
+      - SALT=${LANGFUSE_SALT}
+      - TELEMETRY_ENABLED=false
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+
+  langfuse-db:
+    image: postgres:16-alpine
+    profiles: ["self-hosted"]
+    environment:
+      - POSTGRES_USER=langfuse
+      - POSTGRES_PASSWORD=langfuse
+      - POSTGRES_DB=langfuse
+    volumes:
+      - langfuse-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
+  langfuse-pgdata:
+  uploads:
