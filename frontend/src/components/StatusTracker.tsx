@@ -128,7 +128,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       setIncident(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load incident");
+      setError("Could not load incident details. It may have been deleted or the server is temporarily unavailable.");
     }
   }, [incidentId]);
 
@@ -257,7 +257,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
             {retrying && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
             {retrying ? "Retrying..." : "Retry triage"}
           </button>
-          {retryError && <p className="text-xs text-red-400 mt-1">Retry failed. Try again.</p>}
+          {retryError && <p className="text-xs text-red-400 mt-1">Could not restart triage. The server may be busy &mdash; try again in a moment.</p>}
         </div>
       )}
 
@@ -392,7 +392,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
         <section className="space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
             <ExternalLink className="w-4 h-4 text-indigo-500" />
-            Routing
+            Notifications & Ticket
           </h3>
 
           <div className="space-y-2 text-sm">

@@ -112,7 +112,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
       setIncidents(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load incidents");
+      setError("Could not load incidents. The server may be temporarily unavailable.");
     } finally {
       setLoading(false);
     }
@@ -135,7 +135,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
             className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <Download className="w-4 h-4" />
-            Export
+            Export JSON
           </button>
           <button
             onClick={() => {
@@ -198,7 +198,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
         </div>
       ) : incidents.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-3">No incidents reported yet.</p>
+          <p className="text-gray-500 mb-3">No incidents reported yet. When you submit an incident, it will appear here with live triage status.</p>
           {onReportNew && (
             <button onClick={onReportNew} className="text-indigo-400 hover:text-indigo-300 text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded">
               Report your first incident
@@ -207,7 +207,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
         </div>
       ) : filteredIncidents.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-500">
-          No incidents match the current filters.
+          No incidents match your filters.
           <button onClick={() => { setSearchText(""); setSeverityFilter(""); setStatusFilter(""); }} className="text-indigo-400 hover:text-indigo-300 text-sm ml-2 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded">
             Clear filters
           </button>

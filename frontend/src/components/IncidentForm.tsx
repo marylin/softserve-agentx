@@ -103,7 +103,13 @@ export default function IncidentForm({ onSubmitted }: Props) {
       );
       onSubmitted(res.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit incident");
+      const raw = err instanceof Error ? err.message : "";
+      // 400-level errors from the backend already have descriptive messages -- show as-is
+      if (raw.includes("400") || raw.includes("422") || raw.includes("validation")) {
+        setError(raw);
+      } else {
+        setError("Could not submit incident. Check your connection and try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -165,7 +171,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
           maxLength={200}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Brief description of the incident"
+          placeholder="Brief summary, e.g. 'Checkout fails with 500 error'"
           className={inputClasses}
         />
         <p className="mt-1 text-xs text-gray-500">{title.length}/200</p>
@@ -204,7 +210,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
                 className={`text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded ${listening ? "text-red-400" : "text-indigo-400 hover:text-indigo-300"}`}
               >
                 <Mic className="w-3 h-3" aria-hidden="true" />
-                {listening ? "Stop" : "Voice"}
+                {listening ? "Stop" : "Dictate"}
               </button>
             )}
             <button
@@ -218,11 +224,11 @@ export default function IncidentForm({ onSubmitted }: Props) {
               ) : (
                 <Sparkles className="w-3 h-3" aria-hidden="true" />
               )}
-              {suggesting ? "Writing..." : "AI Suggest"}
+              {suggesting ? "Writing suggestion..." : "Suggest description"}
             </button>
           </div>
         </div>
-        {suggestError && <span className="text-xs text-red-400">Could not generate suggestion. Try again.</span>}
+        {suggestError && <span className="text-xs text-red-400">AI suggestion unavailable. You can write the description manually.</span>}
         <textarea
           id="incident-description"
           required
@@ -230,15 +236,15 @@ export default function IncidentForm({ onSubmitted }: Props) {
           rows={6}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="What happened? Include error messages, timestamps, affected services..."
+          placeholder="What happened? Include error messages, steps to reproduce, and which users are affected."
           className={inputClasses}
         />
         <div className="mt-1">
           {(() => {
             const len = description.length;
-            if (len === 0) return <span className="text-xs text-gray-500">Detailed descriptions improve AI triage accuracy</span>;
-            if (len < 100) return <span className="text-xs text-yellow-400">Add more detail for better AI triage ({len}/5000)</span>;
-            if (len < 200) return <span className="text-xs text-gray-400">Good start &mdash; include error messages and steps to reproduce ({len}/5000)</span>;
+            if (len === 0) return <span className="text-xs text-gray-500">More detail helps the AI triage accurately</span>;
+            if (len < 100) return <span className="text-xs text-yellow-400">A bit more detail will improve triage accuracy ({len}/5000)</span>;
+            if (len < 200) return <span className="text-xs text-gray-400">Good start &mdash; error messages and reproduction steps help most ({len}/5000)</span>;
             return <span className="text-xs text-green-400">Good detail level ({len}/5000)</span>;
           })()}
         </div>
