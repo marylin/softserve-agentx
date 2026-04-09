@@ -81,6 +81,7 @@ const STATUS_CONFIG: Record<
 export default function ComponentHealth() {
   const [components, setComponents] = useState<ComponentData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unmappedCount, setUnmappedCount] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -141,6 +142,11 @@ export default function ComponentHealth() {
           }
         }
 
+        const unmappedCount = incidents.filter((inc: { description?: string }) => {
+          const desc = inc.description || "";
+          return !desc.startsWith("[Affected Area: ");
+        }).length;
+
         const result: ComponentData[] = COMPONENTS.map((name) => {
           const entry = componentMap[name];
           let status: HealthStatus = "healthy";
@@ -159,6 +165,7 @@ export default function ComponentHealth() {
 
         if (active) {
           setComponents(result);
+          setUnmappedCount(unmappedCount);
           setLoading(false);
         }
       } catch {
@@ -215,9 +222,18 @@ export default function ComponentHealth() {
                     : "No incidents"}
                 </span>
               </div>
+              {comp.status === "healthy" && comp.lastIncidentTime && (
+                <p className="text-xs text-gray-500 mt-1">Last incident: {relativeTime(comp.lastIncidentTime)}</p>
+              )}
             </div>
           );
         })}
+      </div>
+      <div className="mt-6 space-y-2 text-xs text-gray-500">
+        <p>Health status is derived from open incident reports, not live system monitoring.</p>
+        {unmappedCount > 0 && (
+          <p className="text-yellow-500">{unmappedCount} incident(s) not mapped to a component (no affected area selected).</p>
+        )}
       </div>
     </div>
   );

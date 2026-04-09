@@ -31,6 +31,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
   const [listening, setListening] = useState(false);
   const [areas, setAreas] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [suggestError, setSuggestError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
 
@@ -43,11 +44,12 @@ export default function IncidentForm({ onSubmitted }: Props) {
 
   const handleSuggest = async () => {
     setSuggesting(true);
+    setSuggestError(false);
     try {
       const suggestion = await suggestDescription(title, affectedArea);
       setDescription(suggestion);
     } catch {
-      /* ignore */
+      setSuggestError(true);
     }
     setSuggesting(false);
   };
@@ -180,6 +182,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
             <option key={area} value={area}>{area}</option>
           ))}
         </select>
+        <p className="text-xs text-gray-500 mt-1">Recommended -- enables component health tracking</p>
       </div>
 
       <div>
@@ -213,6 +216,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
             </button>
           </div>
         </div>
+        {suggestError && <span className="text-xs text-red-400">Could not generate suggestion. Try again.</span>}
         <textarea
           required
           maxLength={5000}
@@ -222,7 +226,15 @@ export default function IncidentForm({ onSubmitted }: Props) {
           placeholder="What happened? Include error messages, timestamps, affected services..."
           className={inputClasses}
         />
-        <p className="mt-1 text-xs text-gray-500">{description.length}/5000</p>
+        <div className="mt-1">
+          {(() => {
+            const len = description.length;
+            if (len === 0) return <span className="text-xs text-gray-500">Detailed descriptions improve AI triage accuracy</span>;
+            if (len < 100) return <span className="text-xs text-yellow-400">Add more detail for better AI triage ({len}/5000)</span>;
+            if (len < 200) return <span className="text-xs text-gray-400">Good start -- include error messages and steps to reproduce ({len}/5000)</span>;
+            return <span className="text-xs text-green-400">Good detail level ({len}/5000)</span>;
+          })()}
+        </div>
       </div>
 
       <div>
