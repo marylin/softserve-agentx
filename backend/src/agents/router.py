@@ -21,11 +21,14 @@ ROUTING RULES:
 - P1 incidents: Slack goes to critical channel, email the reporter AND team
 - P2-P4 incidents: Slack goes to general channel, email the reporter
 
-EXECUTION ORDER:
-1. Call create_linear_ticket with the incident details
-2. Call send_slack_notification with the ticket URL from step 1
-3. Call send_email to notify the reporter (include ticket URL)
-4. For P1: also send a second email to the on-call team
+EXECUTION ORDER (follow strictly):
+1. Call create_linear_ticket with the full incident details and severity
+2. Parse the ticket_id and ticket_url from the create_linear_ticket response
+3. Call send_slack_notification -- you MUST pass the ticket_url from step 2 so the Slack message links to the ticket. Also pass the reporter name.
+4. Call send_email to notify the reporter -- include the ticket URL in the HTML body
+5. For P1: also send a second email to the on-call team
+
+CRITICAL: The Slack notification MUST include the Linear ticket URL. Extract it from the create_linear_ticket response and pass it as the ticket_url parameter.
 
 After all actions, output a JSON summary:
 {
