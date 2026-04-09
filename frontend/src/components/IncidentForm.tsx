@@ -1,7 +1,10 @@
 import { useState, useRef } from "react";
-import { Paperclip, X, Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { Paperclip, X, Loader2, AlertCircle, Sparkles, Mic } from "lucide-react";
 import { createIncident, suggestDescription } from "../lib/api";
 import ScreenRecorder from "./ScreenRecorder";
+
+const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+const speechSupported = !!SpeechRecognition;
 
 interface Props {
   onSubmitted: (id: string) => void;
@@ -16,8 +19,10 @@ export default function IncidentForm({ onSubmitted }: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const [listening, setListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   const handleSuggest = async () => {
     setSuggesting(true);
@@ -28,6 +33,28 @@ export default function IncidentForm({ onSubmitted }: Props) {
       /* ignore */
     }
     setSuggesting(false);
+  };
+
+  const handleVoice = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join(" ");
+      setDescription(prev => prev ? prev + " " + transcript : transcript);
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setListening(true);
   };
 
   const addFiles = (newFiles: FileList | File[]) => {
@@ -152,19 +179,31 @@ export default function IncidentForm({ onSubmitted }: Props) {
           <label className="block text-sm font-medium text-gray-300">
             Description
           </label>
-          <button
-            type="button"
-            onClick={handleSuggest}
-            disabled={!title || suggesting}
-            className="text-sm text-orange-400 hover:text-orange-300 disabled:text-gray-600 flex items-center gap-1"
-          >
-            {suggesting ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              <Sparkles className="w-3 h-3" />
+          <div className="flex items-center gap-3">
+            {speechSupported && (
+              <button
+                type="button"
+                onClick={handleVoice}
+                className={`text-sm flex items-center gap-1 ${listening ? "text-red-400" : "text-orange-400 hover:text-orange-300"}`}
+              >
+                <Mic className="w-3 h-3" />
+                {listening ? "Stop" : "Voice"}
+              </button>
             )}
-            {suggesting ? "Writing..." : "AI Suggest"}
-          </button>
+            <button
+              type="button"
+              onClick={handleSuggest}
+              disabled={!title || suggesting}
+              className="text-sm text-orange-400 hover:text-orange-300 disabled:text-gray-600 flex items-center gap-1"
+            >
+              {suggesting ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Sparkles className="w-3 h-3" />
+              )}
+              {suggesting ? "Writing..." : "AI Suggest"}
+            </button>
+          </div>
         </div>
         <textarea
           required
