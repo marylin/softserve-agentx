@@ -192,8 +192,10 @@ Watch the full 3-minute demo: **https://youtu.be/d4C0o-WMF8E**
 
 ## Live Demo
 
+- **Presentation:** https://marylin.github.io/softserve-agentx/
 - **Frontend:** https://ssagentx.up.railway.app
 - **Backend API:** https://ssagentx-b.up.railway.app
+- **API Docs:** https://ssagentx-b.up.railway.app/docs
 - **Slack workspace:** [Join ss-agentx](https://join.slack.com/t/ss-agentx/shared_invite/zt-3uykoe9oh-Y~eBDCd8QPs3Y6ipjaSFQw)
 
 ## Documentation
