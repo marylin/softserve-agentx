@@ -80,7 +80,29 @@ def run_router_agent(
         trace_span=trace_span,
     )
 
-    return _parse_router_response(raw)
+    result = _parse_router_response(raw)
+
+    # Send styled confirmation email to reporter (outside LLM control for consistency)
+    from src.agents.tools.email_template import build_routing_email
+    from src.agents.tools.email_tool import send_email
+    try:
+        html = build_routing_email(
+            title=incident_title,
+            severity=severity,
+            summary=triage_result.summary,
+            ticket_id=result.linear_ticket_id,
+            ticket_url=result.linear_ticket_url,
+        )
+        send_email(
+            to=reporter_email,
+            subject=f"[{severity}] {incident_title}",
+            html_body=html,
+        )
+        result.email_sent = True
+    except Exception as e:
+        log.warning("routing_email_failed", error=str(e))
+
+    return result
 
 
 def _parse_router_response(raw: str) -> RoutingResult:

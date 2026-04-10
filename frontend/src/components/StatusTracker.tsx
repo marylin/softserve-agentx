@@ -39,15 +39,25 @@ function formatDuration(ms: number): string {
   return `${minutes}m ${seconds}s`;
 }
 
-function SlaCountdown({ severity, createdAt }: { severity: string; createdAt: string }) {
+function SlaCountdown({ severity, createdAt, resolved }: { severity: string; createdAt: string; resolved?: boolean }) {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
+    if (resolved) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [resolved]);
 
   const { remaining, breached } = getSlaStatus(severity, createdAt, now);
+
+  if (resolved) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-green-400">
+        <Clock className="w-3 h-3" />
+        {breached ? `Resolved (SLA was breached)` : `Resolved within SLA`}
+      </span>
+    );
+  }
 
   return (
     <span
@@ -284,7 +294,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                 </span>
               );
             })()}
-            <SlaCountdown severity={incident.triage.severity} createdAt={incident.created_at} />
+            <SlaCountdown severity={incident.triage.severity} createdAt={incident.created_at} resolved={incident.status === "resolved"} />
             {(() => {
               const baseInputTokens = 8000;
               const baseOutputTokens = 1700;
