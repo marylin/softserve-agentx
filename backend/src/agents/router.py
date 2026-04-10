@@ -83,6 +83,8 @@ def run_router_agent(
             title=incident_title,
             severity=severity,
             summary=triage_result.summary,
+            affected_modules=triage_result.affected_modules,
+            runbook_steps=triage_result.runbook_steps,
             ticket_id=result.linear_ticket_id,
             ticket_url=result.linear_ticket_url,
         )
