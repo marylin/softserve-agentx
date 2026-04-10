@@ -82,7 +82,7 @@ export default function App() {
           <div className="flex items-center gap-3 shrink-0">
             <Shield className="w-6 h-6 text-teal-400" />
             <h1 className="text-lg font-semibold tracking-tight text-gray-100">
-              AgentX <span className="hidden sm:inline font-normal text-gray-400">SRE Triage</span>
+              Agent<span className="text-teal-400">X</span> <span className="hidden sm:inline font-normal text-gray-400">SRE Triage</span>
             </h1>
           </div>
           <nav className="flex flex-wrap gap-1 sm:gap-4 justify-end">
