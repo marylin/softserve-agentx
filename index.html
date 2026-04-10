@@ -176,6 +176,35 @@
       transition: color 0.2s;
     }
     .lightbox-close:hover { color: #f3f4f6; }
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(17,24,39,0.6);
+      border: 1px solid rgba(55,65,81,0.5);
+      color: #9ca3af;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s, border-color 0.2s;
+      backdrop-filter: blur(8px);
+    }
+    .lightbox-nav:hover { color: #f3f4f6; background: rgba(17,24,39,0.8); border-color: rgba(45,212,191,0.3); }
+    .lightbox-prev { left: 1.5rem; }
+    .lightbox-next { right: 1.5rem; }
+    .lightbox-counter {
+      position: absolute;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: #6b7280;
+    }
     /* Clickable screenshot */
     .screenshot-frame { cursor: zoom-in; transition: transform 0.2s, border-color 0.2s; }
     .screenshot-frame:hover { transform: translateY(-2px); border-color: rgba(45,212,191,0.3); }
@@ -186,9 +215,16 @@
   <div class="progress-bar" id="progressBar" style="width: 0%"></div>
 
   <!-- Lightbox overlay -->
-  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
-    <span class="lightbox-close">&times;</span>
+  <div class="lightbox" id="lightbox" onclick="onLightboxClick(event)">
+    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+    <div class="lightbox-counter" id="lightboxCounter"></div>
+    <div class="lightbox-nav lightbox-prev" onclick="lightboxPrev(event)">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </div>
     <img id="lightboxImg" src="" alt="" />
+    <div class="lightbox-nav lightbox-next" onclick="lightboxNext(event)">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </div>
     <div class="lightbox-caption" id="lightboxCaption"></div>
   </div>
 
@@ -1038,11 +1074,13 @@
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
-      // Close lightbox on Escape
-      if (e.key === 'Escape') { closeLightbox(); return; }
-
-      // Don't navigate slides while lightbox is open
-      if (document.getElementById('lightbox').classList.contains('active')) return;
+      // Lightbox controls
+      if (lightbox.classList.contains('active')) {
+        if (e.key === 'Escape') { closeLightbox(); return; }
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); lightboxNext(); return; }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); lightboxPrev(); return; }
+        return;
+      }
 
       const current = Math.round(window.scrollY / window.innerHeight);
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
@@ -1062,24 +1100,49 @@
       }
     });
 
-    // Lightbox — click any screenshot to enlarge
+    // Lightbox gallery — click to open, arrows to navigate
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightboxImg');
     const lightboxCaption = document.getElementById('lightboxCaption');
+    const lightboxCounter = document.getElementById('lightboxCounter');
+    const frames = Array.from(document.querySelectorAll('.screenshot-frame'));
+    let currentImageIndex = 0;
 
-    document.querySelectorAll('.screenshot-frame').forEach(frame => {
+    function showImage(index) {
+      currentImageIndex = index;
+      const frame = frames[index];
+      const img = frame.querySelector('img');
+      if (!img) return;
+      lightboxImg.src = img.src;
+      lightboxImg.alt = img.alt;
+      lightboxCaption.textContent = frame.dataset.caption || img.alt;
+      lightboxCounter.textContent = (index + 1) + ' / ' + frames.length;
+    }
+
+    frames.forEach((frame, i) => {
       frame.addEventListener('click', () => {
-        const img = frame.querySelector('img');
-        if (!img) return;
-        lightboxImg.src = img.src;
-        lightboxImg.alt = img.alt;
-        lightboxCaption.textContent = frame.dataset.caption || img.alt;
+        showImage(i);
         lightbox.classList.add('active');
       });
     });
 
+    function lightboxNext(e) {
+      if (e) e.stopPropagation();
+      showImage((currentImageIndex + 1) % frames.length);
+    }
+
+    function lightboxPrev(e) {
+      if (e) e.stopPropagation();
+      showImage((currentImageIndex - 1 + frames.length) % frames.length);
+    }
+
     function closeLightbox() {
       lightbox.classList.remove('active');
+    }
+
+    function onLightboxClick(e) {
+      // Close only if clicking the backdrop (not arrows, image, or caption)
+      if (e.target === lightbox) closeLightbox();
     }
   </script>
 </body>
