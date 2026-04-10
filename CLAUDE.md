@@ -29,14 +29,6 @@ SRE Incident Intake & Triage Agent for Medusa.js e-commerce. Built for the SoftS
 - **Full stack:** `docker compose up --build`
 - **Self-hosted Langfuse:** `docker compose --profile self-hosted up --build`
 
-## Implementation Plan
-
-See `docs/superpowers/plans/2026-04-09-sre-triage-agent.md` for the full plan with code.
-Read the **AMENDMENTS** section at the top first -- it overrides parts of the original plan.
-
-## Design Spec
-
-See `docs/superpowers/specs/2026-04-09-sre-triage-agent-design.md`
 
 ## Rules
 
