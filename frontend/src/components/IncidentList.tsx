@@ -6,8 +6,9 @@ import SeverityBadge from "./SeverityBadge";
 
 const SLA_MINUTES: Record<string, number> = { P1: 15, P2: 60, P3: 240, P4: 1440 };
 
-function formatAge(createdAt: string) {
-  const ms = Date.now() - new Date(createdAt).getTime();
+function formatAge(createdAt: string, endAt?: string) {
+  const end = endAt ? new Date(endAt).getTime() : Date.now();
+  const ms = end - new Date(createdAt).getTime();
   const mins = Math.floor(ms / 60000);
   if (mins < 60) return `${mins}m`;
   const hours = Math.floor(mins / 60);
@@ -24,7 +25,7 @@ function isSlaBreach(severity: string | null, createdAt: string): boolean {
 function formatReported(createdAt: string) {
   const ms = Date.now() - new Date(createdAt).getTime();
   if (ms < 86400000) return formatAge(createdAt) + " ago";
-  return new Date(createdAt).toLocaleDateString();
+  return new Date(createdAt).toLocaleString();
 }
 
 interface Props {
@@ -252,10 +253,13 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
                   <td className="px-4 py-3">
                     <span className={
                       inc.status === "resolved" ? "text-green-400" :
-                      (inc.status !== "failed" && isSlaBreach(inc.severity, inc.created_at)) ? "text-red-400" :
+                      inc.status === "failed" ? "text-red-400" :
+                      isSlaBreach(inc.severity, inc.created_at) ? "text-red-400" :
                       "text-gray-500"
                     }>
-                      {formatAge(inc.created_at)}
+                      {(inc.status === "resolved" || inc.status === "failed")
+                        ? formatAge(inc.created_at, inc.updated_at)
+                        : formatAge(inc.created_at)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-500 hidden md:table-cell">
