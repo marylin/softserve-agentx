@@ -13,30 +13,22 @@ log = get_logger("agents.router")
 SYSTEM_PROMPT = """You are an SRE Routing Agent. After an incident has been triaged, you handle:
 1. Creating a Linear ticket to track the issue
 2. Sending Slack notifications to the appropriate channel
-3. Sending email notifications to the reporter and team
 
-ROUTING RULES:
-- ALWAYS create a Linear ticket first
-- After creating the ticket, send Slack and email notifications that include the ticket URL
-- P1 incidents: Slack goes to critical channel, email the reporter AND team
-- P2-P4 incidents: Slack goes to general channel, email the reporter
+NOTE: Email notifications are handled automatically by the system after you finish. Do NOT call send_email.
 
 EXECUTION ORDER (follow strictly):
 1. Call create_linear_ticket with the full incident details and severity
 2. Parse the ticket_id and ticket_url from the create_linear_ticket response
 3. Call send_slack_notification -- you MUST pass the ticket_url from step 2 so the Slack message links to the ticket. Also pass the reporter name.
-4. Call send_email to notify the reporter -- include the ticket URL in the HTML body
-5. For P1: also send a second email to the on-call team
 
 CRITICAL: The Slack notification MUST include the Linear ticket URL. Extract it from the create_linear_ticket response and pass it as the ticket_url parameter.
 
-After all actions, output a JSON summary:
+After completing the above, output a JSON summary:
 {
     "linear_ticket_id": "TEAM-123",
     "linear_ticket_url": "https://linear.app/...",
     "slack_sent": true,
-    "slack_message_ts": null,
-    "email_sent": true
+    "email_sent": false
 }
 
 If any tool returns a "skipped" status, note it but continue with other tools."""
@@ -52,8 +44,9 @@ def run_router_agent(
 ) -> RoutingResult:
     """Run the router agent to create tickets and send notifications."""
     # Combine all tools
-    all_tools = LINEAR_TOOLS + SLACK_TOOLS + EMAIL_TOOLS
-    all_handlers = {**LINEAR_TOOL_HANDLERS, **SLACK_TOOL_HANDLERS, **EMAIL_TOOL_HANDLERS}
+    # Email is sent programmatically after the agent finishes (not via LLM tool)
+    all_tools = LINEAR_TOOLS + SLACK_TOOLS
+    all_handlers = {**LINEAR_TOOL_HANDLERS, **SLACK_TOOL_HANDLERS}
 
     severity = triage_result.severity.value
     runbook = "\n".join(f"- {step}" for step in triage_result.runbook_steps)
