@@ -1,16 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  /* Color tokens */
-  --color-accent: oklch(0.585 0.233 264);
-  --color-accent-hover: oklch(0.541 0.281 264);
-  --color-accent-light: oklch(0.673 0.205 264);
-  --color-surface: oklch(0.145 0.005 264);
-  --color-surface-raised: oklch(0.178 0.005 264);
-  --color-border: oklch(0.25 0.005 264);
-  --color-text-primary: oklch(0.93 0.005 264);
-  --color-text-secondary: oklch(0.65 0.01 264);
-  --color-text-muted: oklch(0.5 0.01 264);
+  /*
+   * Color system: Tailwind's gray-950/900/800 scale with indigo-500/600 accent.
+   * Semantic colors: red (P1/critical), amber (P2/high), yellow (P3/medium), gray (P4/low).
+   * Tailwind's built-in color scale IS the design token system -- no separate abstraction needed.
+   */
 
   /* Typography tokens -- 1.25 ratio scale */
   --text-caption: 0.75rem;    /* 12px */

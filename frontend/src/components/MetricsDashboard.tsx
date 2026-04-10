@@ -82,8 +82,8 @@ export default function MetricsDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400">
-        <Loader2 className="w-6 h-6 animate-spin mr-2" />
+      <div className="flex items-center justify-center gap-2 py-20 text-gray-400">
+        <Loader2 className="w-6 h-6 animate-spin" />
         Loading metrics...
       </div>
     );
@@ -168,11 +168,12 @@ export default function MetricsDashboard() {
             Affected Components
           </h3>
           <div className="space-y-2">
-            {Object.entries(metrics.component_distribution)
+            {(() => {
+              const componentTotal = Object.values(metrics.component_distribution).reduce((s, n) => s + n, 0);
+              return Object.entries(metrics.component_distribution)
               .sort(([, a], [, b]) => b - a)
               .map(([component, count]) => {
-                const total = Object.values(metrics.component_distribution).reduce((s, n) => s + n, 0);
-                const pct = total > 0 ? (count / total) * 100 : 0;
+                const pct = componentTotal > 0 ? (count / componentTotal) * 100 : 0;
                 return (
                   <Tooltip key={component} text={`${component}: ${count} incident${count !== 1 ? "s" : ""} (${pct.toFixed(0)}% of total)`}>
                     <div className="flex items-center gap-3">
@@ -187,7 +188,8 @@ export default function MetricsDashboard() {
                     </div>
                   </Tooltip>
                 );
-              })}
+              });
+            })()}
           </div>
         </div>
       )}

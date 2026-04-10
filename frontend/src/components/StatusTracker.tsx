@@ -23,9 +23,9 @@ import SeverityBadge from "./SeverityBadge";
 
 const SLA_MINUTES: Record<string, number> = { P1: 15, P2: 60, P3: 240, P4: 1440 };
 
-function getSlaStatus(severity: string, createdAt: string) {
+function getSlaStatus(severity: string, createdAt: string, now: number = Date.now()) {
   const slaMs = (SLA_MINUTES[severity] || 60) * 60 * 1000;
-  const elapsed = Date.now() - new Date(createdAt).getTime();
+  const elapsed = now - new Date(createdAt).getTime();
   const remaining = slaMs - elapsed;
   return { remaining, breached: remaining <= 0 };
 }
@@ -47,9 +47,7 @@ function SlaCountdown({ severity, createdAt }: { severity: string; createdAt: st
     return () => clearInterval(id);
   }, []);
 
-  // `now` state triggers re-renders; getSlaStatus uses Date.now() internally
-  void now;
-  const { remaining, breached } = getSlaStatus(severity, createdAt);
+  const { remaining, breached } = getSlaStatus(severity, createdAt, now);
 
   return (
     <span
@@ -61,6 +59,9 @@ function SlaCountdown({ severity, createdAt }: { severity: string; createdAt: st
       {breached
         ? `SLA BREACHED by ${formatDuration(remaining)}`
         : `SLA: ${formatDuration(remaining)} remaining`}
+      {breached && (
+        <span className="sr-only" aria-live="assertive">SLA breached for this incident</span>
+      )}
     </span>
   );
 }
@@ -193,14 +194,13 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       </div>
 
       {/* Progress Steps */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+      <div role="list" aria-label="Incident progress" className="flex flex-col sm:flex-row sm:items-center gap-2">
         {STEPS.map((step, i) => {
           const done = !failed && current >= i;
-          // Spinner shows on the NEXT step after current (the one being worked on)
-          // e.g., status="triaging" -> spinner on "Analyzing" (i=1), check on "Received" (i=0)
           const isInProgress = !failed && !terminal && i === current + 1;
+          const isCurrent = !failed && current === i;
           return (
-            <div key={step.key} className="flex items-center gap-2">
+            <div key={step.key} role="listitem" aria-current={isCurrent || isInProgress ? "step" : undefined} className="flex items-center gap-2">
               {i > 0 && (
                 <>
                   <div
@@ -268,7 +268,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
       {/* Triage Results */}
       {incident.triage && (
-        <section className="animate-slide-up space-y-4 rounded border border-gray-800 bg-gray-900 p-5">
+        <section className="animate-slide-up space-y-4 rounded-lg border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
             <FileText className="w-4 h-4 text-indigo-500" />
             Triage Results
@@ -362,7 +362,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
       {/* Similar Incidents */}
       {similarIncidents.length > 0 && (
-        <section className="animate-slide-up space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
+        <section className="animate-slide-up space-y-3 rounded-lg border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
             <Link2 className="w-4 h-4 text-indigo-500" />
             Related Incidents
@@ -394,7 +394,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
 
       {/* Routing Results */}
       {incident.routing && (
-        <section className="animate-slide-up space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
+        <section className="animate-slide-up space-y-3 rounded-lg border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
             <ExternalLink className="w-4 h-4 text-indigo-500" />
             Notifications & Ticket
@@ -463,7 +463,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
         };
 
         return (
-          <section className="animate-slide-up space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
+          <section className="animate-slide-up space-y-3 rounded-lg border border-gray-800 bg-gray-900 p-5">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
               <Clock className="w-4 h-4 text-indigo-500" />
               Timeline
@@ -492,7 +492,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       })()}
 
       {/* Original Report */}
-      <section className="space-y-3 rounded border border-gray-800 bg-gray-900 p-5">
+      <section className="space-y-3 rounded-lg border border-gray-800 bg-gray-900 p-5">
         <h3 className="text-sm font-semibold text-gray-200">Original Report</h3>
         <div className="text-sm text-gray-400">
           <p>

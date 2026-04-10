@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Shield, FileText, Plus, List, BarChart3, Activity } from "lucide-react";
 import IncidentForm from "./components/IncidentForm";
 import IncidentList from "./components/IncidentList";
@@ -23,6 +23,8 @@ export default function App() {
   const [view, setView] = useState<View>(initial.view);
   const [selectedId, setSelectedId] = useState<string | null>(initial.selectedId);
   const [alertCounts, setAlertCounts] = useState({ open: 0, critical: 0 });
+  const [animating, setAnimating] = useState(false);
+  const prevView = useRef(view);
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -53,6 +55,15 @@ export default function App() {
     if (newView === "health") path = "/health";
     window.history.pushState({ view: newView, id }, "", path);
   };
+
+  useEffect(() => {
+    if (prevView.current !== view) {
+      setAnimating(true);
+      prevView.current = view;
+      const timer = setTimeout(() => setAnimating(false), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [view]);
 
   useEffect(() => {
     const handlePop = () => {
@@ -140,8 +151,8 @@ export default function App() {
           </nav>
         </div>
       </header>
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6" key={view}>
-        <div className="animate-fade-in">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <div className={animating ? "animate-fade-in" : ""}>
           {view === "form" && (
             <IncidentForm
               onSubmitted={(id) => navigate("detail", id)}

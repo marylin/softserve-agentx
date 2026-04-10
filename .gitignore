@@ -2,28 +2,6 @@
 .agents/
 .claude/skills/
 skills-lock.json
-.codebuddy/
-.commandcode/
-.continue/
-.crush/
-.factory/
-.goose/
-.junie/
-.kilocode/
-.kiro/
-.kode/
-.mcpjam/
-.mux/
-.neovate/
-.openhands/
-.pi/
-.pochi/
-.qoder/
-.qwen/
-.roo/
-.trae/
-.windsurf/
-.zencoder/
 .playwright-mcp/
 .superpowers/
 skills/
@@ -73,6 +51,9 @@ Desktop.ini
 # === Internal docs (specs, plans, contest context -- not for submission) ===
 docs/
 
+# === Submission materials (video, presentation, scripts -- local only) ===
+submission/
+
 # === Project-specific ===
 # Uploaded incident files (runtime)
 uploads/
@@ -90,3 +71,4 @@ docs/evidence/*.txt
 # Build artifacts
 *.tar
 *.gz
+*.png

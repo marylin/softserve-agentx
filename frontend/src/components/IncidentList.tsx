@@ -213,7 +213,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
           </button>
         </p>
       ) : (
-        <div className="overflow-x-auto rounded border border-gray-800">
+        <div className="overflow-x-auto rounded-lg border border-gray-800">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-gray-800 bg-gray-900/60 text-xs uppercase tracking-wide text-gray-400">

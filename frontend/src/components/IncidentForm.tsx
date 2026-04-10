@@ -251,9 +251,9 @@ export default function IncidentForm({ onSubmitted }: Props) {
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-300">
+        <p className="mb-2 text-sm font-medium text-gray-300">
           Attachments
-        </label>
+        </p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"

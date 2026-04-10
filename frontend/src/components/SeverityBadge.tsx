@@ -34,7 +34,7 @@ export default function SeverityBadge({ level }: { level: SeverityLevel }) {
   const { label, classes } = config[level];
   return (
     <span
-      title={SLA_TOOLTIPS[level] || ""}
+      aria-label={`${level} ${label} \u2014 ${SLA_TOOLTIPS[level] || ""}`}
       className={`animate-badge inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium ${classes}`}
     >
       {level} {label}
