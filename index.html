@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentX — SRE Incident Triage in 90 Seconds</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwindcss.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-snap-type: y mandatory; }
+    body { background: #030712; color: #f3f4f6; font-family: 'Inter', system-ui, sans-serif; }
+    .slide {
+      scroll-snap-align: start;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide-inner {
+      max-width: 1200px;
+      width: 100%;
+      padding: 2rem 3rem;
+    }
+    /* Teal aurora glow */
+    .aurora-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(45,212,191,0.12) 0%, transparent 70%);
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .aurora-top-right { top: -200px; right: -100px; }
+    .aurora-bottom-left { bottom: -200px; left: -100px; }
+    .aurora-center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    /* Glass card */
+    .glass {
+      background: rgba(17, 24, 39, 0.6);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(55, 65, 81, 0.5);
+      border-radius: 16px;
+    }
+    .glass-sm {
+      background: rgba(17, 24, 39, 0.4);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(55, 65, 81, 0.4);
+      border-radius: 12px;
+    }
+    /* Slide counter */
+    .slide-counter {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: #6b7280;
+      z-index: 50;
+      transition: opacity 0.3s;
+    }
+    /* Pipeline arrow */
+    .pipeline-arrow {
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(to right, #374151, #6b7280);
+      position: relative;
+    }
+    .pipeline-arrow::after {
+      content: '';
+      position: absolute;
+      right: -4px;
+      top: -4px;
+      width: 0; height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 8px solid #6b7280;
+    }
+    /* Progress bar */
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(to right, #2dd4bf, #14b8a6);
+      z-index: 100;
+      transition: width 0.3s ease;
+    }
+    /* Screenshot frame */
+    .screenshot-frame {
+      border: 1px solid rgba(55, 65, 81, 0.6);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(45,212,191,0.08);
+    }
+    .screenshot-frame img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    /* Metric card hover */
+    .metric-card {
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(45,212,191,0.3);
+    }
+    /* Nav hint animation */
+    @keyframes bounce-down {
+      0%, 100% { transform: translateY(0); opacity: 0.4; }
+      50% { transform: translateY(6px); opacity: 0.8; }
+    }
+    .nav-hint { animation: bounce-down 2s ease-in-out infinite; }
+    /* Severity dot pulse */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .pulse { animation: pulse-dot 2s ease-in-out infinite; }
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(3,7,18,0.92);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .lightbox.active { opacity: 1; pointer-events: auto; }
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 88vh;
+      border-radius: 12px;
+      box-shadow: 0 0 80px rgba(45,212,191,0.12);
+      border: 1px solid rgba(55,65,81,0.5);
+    }
+    .lightbox-caption {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: #9ca3af;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 2rem;
+      color: #6b7280;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .lightbox-close:hover { color: #f3f4f6; }
+    /* Clickable screenshot */
+    .screenshot-frame { cursor: zoom-in; transition: transform 0.2s, border-color 0.2s; }
+    .screenshot-frame:hover { transform: translateY(-2px); border-color: rgba(45,212,191,0.3); }
+  </style>
+</head>
+<body>
+  <!-- Progress bar -->
+  <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+
+  <!-- Lightbox overlay -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightboxImg" src="" alt="" />
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+
+  <!-- Slide counter -->
+  <div class="slide-counter" id="slideCounter">01 / 12</div>
+
+  <!-- ═══════════════ SLIDE 01: TITLE ═══════════════ -->
+  <section class="slide" id="slide-1">
+    <div class="aurora-glow aurora-center" style="width:800px;height:800px;"></div>
+    <div class="slide-inner text-center">
+      <!-- Logo -->
+      <div class="mb-8">
+        <h1 class="text-7xl font-black tracking-tight">
+          Agent<span class="text-[#2dd4bf]">X</span>
+        </h1>
+      </div>
+      <p class="text-2xl font-light text-gray-400 mb-3 tracking-wide">
+        SRE Incident Triage in <span class="text-[#2dd4bf] font-semibold font-mono">90 Seconds</span>
+      </p>
+      <p class="text-base text-gray-500 mb-12">
+        3-agent pipeline &middot; Codebase-aware &middot; Fully automated routing
+      </p>
+      <div class="flex items-center justify-center gap-6 text-sm text-gray-500">
+        <span class="font-medium text-gray-300">Marylin Alarcon</span>
+        <span class="text-gray-700">|</span>
+        <span>SoftServe AgentX Hackathon 2026</span>
+        <span class="text-gray-700">|</span>
+        <span class="text-[#5eead4] font-mono text-xs">#AgentXHackathon</span>
+      </div>
+      <!-- Nav hint -->
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 nav-hint">
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 02: THE PROBLEM ═══════════════ -->
+  <section class="slide" id="slide-2">
+    <div class="aurora-glow aurora-top-right" style="background:radial-gradient(circle, rgba(248,113,113,0.08) 0%, transparent 70%);"></div>
+    <div class="slide-inner">
+      <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-4">02 — The Problem</p>
+      <h2 class="text-4xl font-bold mb-12">Manual triage is killing your SREs</h2>
+
+      <!-- Big stat -->
+      <div class="glass p-8 mb-10 text-center">
+        <p class="font-mono text-5xl font-bold text-[#f87171] mb-3">2.5 hrs / day</p>
+        <p class="text-gray-400 text-lg">
+          <span class="font-mono text-gray-300">15–30 min</span> × <span class="font-mono text-gray-300">5 incidents</span> = wasted engineering time
+        </p>
+      </div>
+
+      <!-- Pain points -->
+      <div class="grid grid-cols-3 gap-6">
+        <div class="glass-sm p-6 text-center">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-[#f87171]/10 flex items-center justify-center">
+            <svg class="w-6 h-6 text-[#f87171]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <p class="font-semibold text-gray-200 mb-1">Reading logs</p>
+          <p class="text-sm text-gray-500">Sifting through 100s of log lines to find the root cause</p>
+        </div>
+        <div class="glass-sm p-6 text-center">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-[#fbbf24]/10 flex items-center justify-center">
+            <svg class="w-6 h-6 text-[#fbbf24]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </div>
+          <p class="font-semibold text-gray-200 mb-1">Writing tickets</p>
+          <p class="text-sm text-gray-500">Manually crafting Linear issues with severity, labels, assignment</p>
+        </div>
+        <div class="glass-sm p-6 text-center">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-[#60a5fa]/10 flex items-center justify-center">
+            <svg class="w-6 h-6 text-[#60a5fa]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          </div>
+          <p class="font-semibold text-gray-200 mb-1">Pinging Slack</p>
+          <p class="text-sm text-gray-500">Finding the right channel, tagging the right people at 3 AM</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 03: THE SOLUTION ═══════════════ -->
+  <section class="slide" id="slide-3">
+    <div class="aurora-glow aurora-bottom-left"></div>
+    <div class="slide-inner">
+      <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-4">03 — The Solution</p>
+      <h2 class="text-4xl font-bold mb-4">Three agents, one pipeline, zero manual steps</h2>
+      <p class="text-lg text-gray-400 mb-14 max-w-2xl">
+        Report an incident → get a triaged, routed, and tracked issue in 90 seconds. Fully autonomous.
+      </p>
+
+      <!-- Pipeline diagram -->
+      <div class="flex items-center justify-center gap-0">
+        <!-- Intake -->
+        <div class="glass p-6 text-center w-56">
+          <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[#2dd4bf]/10 flex items-center justify-center">
+            <svg class="w-7 h-7 text-[#2dd4bf]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <p class="font-bold text-[#2dd4bf] mb-1">Intake Agent</p>
+          <p class="text-xs text-gray-500">Multimodal extraction<br/>Text, images, logs, video</p>
+        </div>
+
+        <!-- Arrow 1 -->
+        <div class="flex items-center px-2">
+          <div class="w-12 h-[2px] bg-gradient-to-r from-[#2dd4bf]/40 to-[#fbbf24]/40"></div>
+          <svg class="w-3 h-3 text-[#fbbf24]/60 -ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/></svg>
+        </div>
+
+        <!-- Triage -->
+        <div class="glass p-6 text-center w-56">
+          <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[#fbbf24]/10 flex items-center justify-center">
+            <svg class="w-7 h-7 text-[#fbbf24]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <p class="font-bold text-[#fbbf24] mb-1">Triage Agent</p>
+          <p class="text-xs text-gray-500">Codebase analysis<br/>6 investigation tools</p>
+        </div>
+
+        <!-- Arrow 2 -->
+        <div class="flex items-center px-2">
+          <div class="w-12 h-[2px] bg-gradient-to-r from-[#fbbf24]/40 to-[#c084fc]/40"></div>
+          <svg class="w-3 h-3 text-[#c084fc]/60 -ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/></svg>
+        </div>
+
+        <!-- Router -->
+        <div class="glass p-6 text-center w-56">
+          <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[#c084fc]/10 flex items-center justify-center">
+            <svg class="w-7 h-7 text-[#c084fc]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <p class="font-bold text-[#c084fc] mb-1">Router Agent</p>
+          <p class="text-xs text-gray-500">Linear, Slack, Email<br/>Priority-based routing</p>
+        </div>
+      </div>
+
+      <!-- Timing bar -->
+      <div class="mt-10 text-center">
+        <div class="inline-flex items-center gap-3 glass-sm px-6 py-3">
+          <svg class="w-4 h-4 text-[#2dd4bf]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="font-mono text-sm text-gray-300">Report → Triaged → Routed in <span class="text-[#2dd4bf] font-bold">~90 seconds</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 04: AGENT 1 — INTAKE ═══════════════ -->
+  <section class="slide" id="slide-4">
+    <div class="aurora-glow aurora-top-right"></div>
+    <div class="slide-inner">
+      <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-4">04 — Agent 1</p>
+      <h2 class="text-4xl font-bold mb-3">Intake Agent</h2>
+      <p class="text-lg text-gray-400 mb-10">Multimodal extraction — understands text, images, logs, and screen recordings</p>
+
+      <div class="grid grid-cols-2 gap-8">
+        <!-- Left: capabilities -->
+        <div class="space-y-4">
+          <div class="glass-sm p-5 flex items-start gap-4">
+            <div class="w-10 h-10 shrink-0 rounded-xl bg-[#2dd4bf]/10 flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#2dd4bf]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-200 text-sm">Text Description</p>
+              <p class="text-xs text-gray-500 mt-1">Free-form incident descriptions parsed into structured format</p>
+            </div>
+          </div>
+          <div class="glass-sm p-5 flex items-start gap-4">
+            <div class="w-10 h-10 shrink-0 rounded-xl bg-[#2dd4bf]/10 flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#2dd4bf]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-200 text-sm">Screenshot Analysis</p>
+              <p class="text-xs text-gray-500 mt-1">Claude Vision extracts error messages, stack traces, UI state</p>
+            </div>
+          </div>
+          <div class="glass-sm p-5 flex items-start gap-4">
+            <div class="w-10 h-10 shrink-0 rounded-xl bg-[#2dd4bf]/10 flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#2dd4bf]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-200 text-sm">Log Parsing</p>
+              <p class="text-xs text-gray-500 mt-1">Structured extraction from raw log dumps and stack traces</p>
+            </div>
+          </div>
+          <div class="glass-sm p-5 flex items-start gap-4">
+            <div class="w-10 h-10 shrink-0 rounded-xl bg-[#2dd4bf]/10 flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#2dd4bf]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-200 text-sm">Screen Recordings</p>
+              <p class="text-xs text-gray-500 mt-1">Browser-recorded sessions analyzed for reproduction steps</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: I/O diagram -->
+        <div class="glass p-8 flex flex-col justify-center">
+          <p class="text-xs font-mono text-gray-600 uppercase tracking-wider mb-6">Input → Output</p>
+          <div class="space-y-4">
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-mono text-gray-500 w-16">IN</span>
+              <div class="flex-1 h-[1px] bg-gray-800"></div>
+              <span class="text-xs text-gray-400">Raw incident report (any format)</span>
+            </div>
+            <div class="mx-8 flex justify-center">
+              <svg class="w-5 h-5 text-[#2dd4bf]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+            </div>
+            <div class="glass-sm p-4 text-center">
+              <p class="font-mono text-xs text-[#2dd4bf] mb-2">Claude 4 Sonnet</p>
+              <p class="text-xs text-gray-500">Multimodal processing + structured extraction</p>
+            </div>
+            <div class="mx-8 flex justify-center">
+              <svg class="w-5 h-5 text-[#2dd4bf]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-mono text-[#2dd4bf] w-16">OUT</span>
+              <div class="flex-1 h-[1px] bg-[#2dd4bf]/20"></div>
+              <span class="text-xs text-gray-300">Structured incident object</span>
+            </div>
+          </div>
+          <div class="mt-6 font-mono text-xs text-gray-600 bg-gray-950/50 rounded-lg p-3">
+            <span class="text-gray-500">{</span> title, description, component,<br/>
+            &nbsp;&nbsp;error_messages[], affected_systems[],<br/>
+            &nbsp;&nbsp;reproduction_steps, visual_evidence <span class="text-gray-500">}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 05: AGENT 2 — TRIAGE ═══════════════ -->
+  <section class="slide" id="slide-5">
+    <div class="aurora-glow aurora-bottom-left" style="background:radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%);"></div>
+    <div class="slide-inner">
+      <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-4">05 — Agent 2</p>
+      <h2 class="text-4xl font-bold mb-3">Triage Agent</h2>
+      <p class="text-lg text-gray-400 mb-10">Codebase-aware analysis — investigates like an SRE, not just an LLM</p>
+
+      <!-- 6 tools grid -->
+      <div class="grid grid-cols-3 gap-4 mb-10">
+        <div class="glass-sm p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-2 h-2 rounded-full bg-[#fbbf24]"></div>
+            <p class="font-mono text-xs font-semibold text-[#fbbf24]">module_search</p>
+          </div>
+          <p class="text-xs text-gray-500">Find relevant source files by component or keyword</p>
+        </div>
+        <div class="glass-sm p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-2 h-2 rounded-full bg-[#fbbf24]"></div>
+            <p class="font-mono text-xs font-semibold text-[#fbbf24]">code_reader</p>
+          </div>
+          <p class="text-xs text-gray-500">Read source files and understand implementation details</p>
+        </div>
+        <div class="glass-sm p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-2 h-2 rounded-full bg-[#fbbf24]"></div>
+            <p class="font-mono text-xs font-semibold text-[#fbbf24]">error_patterns</p>
+          </div>
+          <p class="text-xs text-gray-500">Match error signatures against known pattern database</p>
+        </div>
+        <div class="glass-sm p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-2 h-2 rounded-full bg-[#fbbf24]"></div>
+            <p class="font-mono text-xs font-semibold text-[#fbbf24]">dependency_graph</p>
+          </div>
+          <p class="text-xs text-gray-500">Trace module dependencies to assess blast radius</p>
+        </div>
+        <div class="glass-sm p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-2 h-2 rounded-full bg-[#fbbf24]"></div>
+            <p class="font-mono text-xs font-semibold text-[#fbbf24]">config_analysis</p>
+          </div>
+          <p class="text-xs text-gray-500">Check environment configs, feature flags, rate limits</p>
+        </div>
+        <div class="glass-sm p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-2 h-2 rounded-full bg-[#fbbf24]"></div>
+            <p class="font-mono text-xs font-semibold text-[#fbbf24]">doc_lookup</p>
+          </div>
+          <p class="text-xs text-gray-500">Search knowledge base for known issues and solutions</p>
+        </div>
+      </div>
+
+      <!-- Flow -->
+      <div class="glass p-6">
+        <div class="flex items-center justify-between">
+          <div class="text-center flex-1">
+            <p class="font-mono text-xs text-gray-500 mb-1">Query</p>
+            <p class="text-sm text-gray-300">Structured incident</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-700 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          <div class="text-center flex-1">
+            <p class="font-mono text-xs text-gray-500 mb-1">Agentic Loop</p>
+            <p class="text-sm text-[#fbbf24]">Tool calls (avg 4-6)</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-700 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          <div class="text-center flex-1">
+            <p class="font-mono text-xs text-gray-500 mb-1">Output</p>
+            <p class="text-sm text-gray-300">Severity + Root cause + Fix suggestion</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 06: AGENT 3 — ROUTER ═══════════════ -->
+  <section class="slide" id="slide-6">
+    <div class="aurora-glow aurora-top-right" style="background:radial-gradient(circle, rgba(192,132,252,0.08) 0%, transparent 70%);"></div>
+    <div class="slide-inner">
+      <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-4">06 — Agent 3</p>
+      <h2 class="text-4xl font-bold mb-3">Router Agent</h2>
+      <p class="text-lg text-gray-400 mb-10">Priority-based routing to the right people, on the right channel, at the right urgency</p>
+
+      <!-- Integration matrix -->
+      <div class="glass overflow-hidden mb-8">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-800">
+              <th class="text-left p-4 font-mono text-xs text-gray-500 font-normal">Severity</th>
+              <th class="text-left p-4 font-mono text-xs text-gray-500 font-normal">Linear Priority</th>
+              <th class="text-left p-4 font-mono text-xs text-gray-500 font-normal">Slack</th>
+              <th class="text-left p-4 font-mono text-xs text-gray-500 font-normal">Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-gray-800/50">
+              <td class="p-4"><span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#f87171] pulse"></span><span class="font-mono font-bold text-[#f87171]">P1</span> Critical</span></td>
+              <td class="p-4 font-mono text-gray-300">Urgent</td>
+              <td class="p-4 text-gray-400">#incidents <span class="text-[#f87171] text-xs">@channel</span></td>
+              <td class="p-4 text-gray-400">Team lead + on-call</td>
+            </tr>
+            <tr class="border-b border-gray-800/50">
+              <td class="p-4"><span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#fbbf24]"></span><span class="font-mono font-bold text-[#fbbf24]">P2</span> High</span></td>
+              <td class="p-4 font-mono text-gray-300">High</td>
+              <td class="p-4 text-gray-400">#incidents <span class="text-[#fbbf24] text-xs">@channel</span></td>
+              <td class="p-4 text-gray-400">Team lead</td>
+            </tr>
+            <tr class="border-b border-gray-800/50">
+              <td class="p-4"><span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#facc15]"></span><span class="font-mono font-bold text-[#facc15]">P3</span> Medium</span></td>
+              <td class="p-4 font-mono text-gray-300">Medium</td>
+              <td class="p-4 text-gray-400">#incidents</td>
+              <td class="p-4 text-gray-400">—</td>
+            </tr>
+            <tr>
+              <td class="p-4"><span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#9ca3af]"></span><span class="font-mono font-bold text-[#9ca3af]">P4</span> Low</span></td>
+              <td class="p-4 font-mono text-gray-300">Low</td>
+              <td class="p-4 text-gray-400">—</td>
+              <td class="p-4 text-gray-400">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Integration logos -->
+      <div class="flex items-center justify-center gap-8">
+        <div class="glass-sm px-5 py-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[#5e6ad2]" viewBox="0 0 24 24" fill="currentColor"><path d="M2.5 10.5L12 2l9.5 8.5-3.5 3-6-5.5-6 5.5z"/><path d="M5 13l7 6.5L19 13l3.5 3L12 25.5 1.5 16z" opacity="0.5"/></svg>
+          <span class="text-sm font-medium text-gray-300">Linear</span>
+        </div>
+        <div class="glass-sm px-5 py-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[#E01E5A]" viewBox="0 0 24 24" fill="currentColor"><path d="M5.042 15.165a2.528 2.528 0 01-2.52 2.523A2.528 2.528 0 010 15.165a2.527 2.527 0 012.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 012.521-2.52 2.527 2.527 0 012.521 2.52v6.313A2.528 2.528 0 018.834 24a2.528 2.528 0 01-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 01-2.521-2.52A2.528 2.528 0 018.834 0a2.528 2.528 0 012.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 012.521 2.521 2.528 2.528 0 01-2.521 2.521H2.522A2.528 2.528 0 010 8.834a2.528 2.528 0 012.522-2.521h6.312zm10.122 2.521a2.528 2.528 0 012.522-2.521A2.528 2.528 0 0124 8.834a2.528 2.528 0 01-2.522 2.521h-2.522V8.834zm-1.268 0a2.528 2.528 0 01-2.523 2.521 2.527 2.527 0 01-2.52-2.521V2.522A2.527 2.527 0 0115.165 0a2.528 2.528 0 012.523 2.522v6.312zm-2.523 10.122a2.528 2.528 0 012.523 2.522A2.528 2.528 0 0115.165 24a2.527 2.527 0 01-2.52-2.522v-2.522h2.52zm0-1.268a2.527 2.527 0 01-2.52-2.523 2.526 2.526 0 012.52-2.52h6.313A2.527 2.527 0 0124 15.165a2.528 2.528 0 01-2.522 2.523h-6.313z"/></svg>
+          <span class="text-sm font-medium text-gray-300">Slack</span>
+        </div>
+        <div class="glass-sm px-5 py-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[#2dd4bf]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          <span class="text-sm font-medium text-gray-300">Resend</span>
+        </div>
+        <div class="glass-sm px-5 py-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-[#f59e0b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          <span class="text-sm font-medium text-gray-300">Langfuse</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 07: ARCHITECTURE ═══════════════ -->
+  <section class="slide" id="slide-7">
+    <div class="aurora-glow aurora-center" style="opacity:0.5;"></div>
+    <div class="slide-inner">
+      <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-4">07 — Architecture</p>
+      <h2 class="text-4xl font-bold mb-10">System Architecture</h2>
+
+      <!-- Architecture diagram as styled HTML -->
+      <div class="glass p-8 mb-8">
+        <div class="flex items-start justify-between gap-4">
+          <!-- Frontend -->
+          <div class="text-center w-32">
+            <div class="glass-sm p-3 mb-2">
+              <p class="font-mono text-xs text-[#60a5fa] font-bold">React + Vite</p>
+              <p class="text-[10px] text-gray-600 mt-1">Tailwind · TypeScript</p>
+            </div>
+            <p class="text-[10px] text-gray-600">5 views</p>
+          </div>
+
+          <svg class="w-5 h-5 text-gray-700 mt-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+
+          <!-- Backend -->
+          <div class="text-center w-32">
+            <div class="glass-sm p-3 mb-2">
+              <p class="font-mono text-xs text-[#4ade80] font-bold">FastAPI</p>
+              <p class="text-[10px] text-gray-600 mt-1">Python 3.12</p>
+            </div>
+            <p class="text-[10px] text-gray-600">REST + SSE</p>
+          </div>
+
+          <svg class="w-5 h-5 text-gray-700 mt-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+
+          <!-- Agents -->
+          <div class="text-center flex-1">
+            <div class="glass-sm p-3 mb-2">
+              <div class="flex items-center justify-center gap-3">
+                <span class="inline-block w-2 h-2 rounded-full bg-[#2dd4bf]"></span>
+                <span class="inline-block w-2 h-2 rounded-full bg-[#fbbf24]"></span>
+                <span class="inline-block w-2 h-2 rounded-full bg-[#c084fc]"></span>
+              </div>
+              <p class="font-mono text-xs text-gray-300 font-bold mt-1">3 Agents</p>
+              <p class="text-[10px] text-gray-600 mt-1">Anthropic SDK · Claude 4 Sonnet</p>
+            </div>
+            <p class="text-[10px] text-gray-600">Tool-use pattern</p>
+          </div>
+
+          <svg class="w-5 h-5 text-gray-700 mt-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+
+          <!-- Integrations -->
+          <div class="text-center w-32">
+            <div class="glass-sm p-3 mb-2">
+              <p class="font-mono text-xs text-[#c084fc] font-bold">Integrations</p>
+              <p class="text-[10px] text-gray-600 mt-1">Linear · Slack · Resend</p>
+            </div>
+            <p class="text-[10px] text-gray-600">4 services</p>
+          </div>
+        </div>
+
+        <!-- DB bar -->
+        <div class="mt-6 pt-4 border-t border-gray-800">
+          <div class="flex items-center justify-center gap-8">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-[#60a5fa]"></div>
+              <span class="font-mono text-xs text-gray-400">PostgreSQL 16</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-[#f59e0b]"></div>
+              <span class="font-mono text-xs text-gray-400">Langfuse Cloud</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-[#2dd4bf]"></div>
+              <span class="font-mono text-xs text-gray-400">Knowledge Base</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State machine -->
+      <div class="glass p-6">
+        <p class="text-xs font-mono text-gray-600 uppercase tracking-wider mb-4">State Machine</p>
+        <div class="flex items-center justify-center gap-2 flex-wrap">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#60a5fa]/10 border border-[#60a5fa]/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#60a5fa]"></span>
+            <span class="font-mono text-xs text-[#60a5fa]">received</span>
+          </span>
+          <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#facc15]/10 border border-[#facc15]/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#facc15]"></span>
+            <span class="font-mono text-xs text-[#facc15]">triaging</span>
+          </span>
+          <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5eead4]/10 border border-[#5eead4]/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#5eead4]"></span>
+            <span class="font-mono text-xs text-[#5eead4]">triaged</span>
+          </span>
+          <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#c084fc]/10 border border-[#c084fc]/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#c084fc]"></span>
+            <span class="font-mono text-xs text-[#c084fc]">routed</span>
+          </span>
+          <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#4ade80]/10 border border-[#4ade80]/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#4ade80]"></span>
+            <span class="font-mono text-xs text-[#4ade80]">resolved</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 08: SECURITY ═══════════════ -->
+  <section class="slide" id="slide-8">
+    <div class="aurora-glow aurora-bottom-left" style="background:radial-gradient(circle, rgba(248,113,113,0.06) 0%, transparent 70%);"></div>
+    <div class="slide-inner">
+      <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-4">08 — Security</p>
+      <h2 class="text-4xl font-bold mb-3">4-Layer Security Model</h2>
+      <p class="text-lg text-gray-400 mb-10">Defense in depth — every layer independently prevents a class of attacks</p>
+
+      <div class="grid grid-cols-2 gap-6">
+        <!-- Layer 1 -->
+        <div class="glass p-6 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1 h-full bg-[#f87171]"></div>
+          <div class="pl-4">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="font-mono text-xs text-[#f87171] bg-[#f87171]/10 px-2 py-0.5 rounded">L1</span>
+              <p class="font-bold text-gray-200">Input Validation</p>
+            </div>
+            <ul class="text-sm text-gray-400 space-y-1.5">
+              <li class="flex items-start gap-2">
+                <span class="text-[#f87171] mt-0.5">&#x2022;</span>
+                Pydantic models with strict field validation
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-[#f87171] mt-0.5">&#x2022;</span>
+                File type allowlisting &amp; size limits
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-[#f87171] mt-0.5">&#x2022;</span>
+                Rate limiting on all endpoints
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Layer 2 -->
+        <div class="glass p-6 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1 h-full bg-[#fbbf24]"></div>
+          <div class="pl-4">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="font-mono text-xs text-[#fbbf24] bg-[#fbbf24]/10 px-2 py-0.5 rounded">L2</span>
+              <p class="font-bold text-gray-200">Prompt Injection Defense</p>
+            </div>
+            <ul class="text-sm text-gray-400 space-y-1.5">
+              <li class="flex items-start gap-2">
+                <span class="text-[#fbbf24] mt-0.5">&#x2022;</span>
+                Input scanning for injection patterns
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-[#fbbf24] mt-0.5">&#x2022;</span>
+                System prompt isolation
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-[#fbbf24] mt-0.5">&#x2022;</span>
+                Output validation before routing
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Layer 3 -->
+        <div class="glass p-6 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1 h-full bg-[#2dd4bf]"></div>
+          <div class="pl-4">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="font-mono text-xs text-[#2dd4bf] bg-[#2dd4bf]/10 px-2 py-0.5 rounded">L3</span>
+              <p class="font-bold text-gray-200">Tool Allowlisting</p>
+            </div>
+            <ul class="text-sm text-gray-400 space-y-1.5">
+              <li class="flex items-start gap-2">
+                <span class="text-[#2dd4bf] mt-0.5">&#x2022;</span>
+                Explicit tool registry — no dynamic tool loading
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-[#2dd4bf] mt-0.5">&#x2022;</span>
+                Read-only codebase access (no writes)
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-[#2dd4bf] mt-0.5">&#x2022;</span>
+                Path traversal prevention
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Layer 4 -->
+        <div class="glass p-6 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1 h-full bg-[#c084fc]"></div>
+          <div class="pl-4">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="font-mono text-xs text-[#c084fc] bg-[#c084fc]/10 px-2 py-0.5 rounded">L4</span>
+              <p class="font-bold text-gray-200">Data Protection</p>
+            </div>
+            <ul class="text-sm text-gray-400 space-y-1.5">
+              <li class="flex items-start gap-2">
+                <span class="text-[#c084fc] mt-0.5">&#x2022;</span>
+                Secrets redaction in logs and traces
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-[#c084fc] mt-0.5">&#x2022;</span>
+                API keys checked at runtime, not hardcoded
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-[#c084fc] mt-0.5">&#x2022;</span>
+                PII-aware structured logging
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 09: OBSERVABILITY ═══════════════ -->
+  <section class="slide" id="slide-9">
+    <div class="aurora-glow aurora-top-right" style="background:radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%);"></div>
+    <div class="slide-inner">
+      <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-4">09 — Observability</p>
+      <h2 class="text-4xl font-bold mb-3">Every agent step is a traced span</h2>
+      <p class="text-lg text-gray-400 mb-10">Full pipeline visibility with Langfuse + structured JSON logging</p>
+
+      <div class="grid grid-cols-3 gap-6 mb-8">
+        <!-- Traces -->
+        <div class="glass p-6">
+          <div class="w-10 h-10 mb-4 rounded-xl bg-[#f59e0b]/10 flex items-center justify-center">
+            <svg class="w-5 h-5 text-[#f59e0b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <p class="font-bold text-gray-200 mb-2">Langfuse Traces</p>
+          <p class="text-sm text-gray-500">Per-incident trace with nested spans for each agent, tool call, and LLM invocation</p>
+        </div>
+
+        <!-- Logging -->
+        <div class="glass p-6">
+          <div class="w-10 h-10 mb-4 rounded-xl bg-[#2dd4bf]/10 flex items-center justify-center">
+            <svg class="w-5 h-5 text-[#2dd4bf]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          </div>
+          <p class="font-bold text-gray-200 mb-2">Structured Logging</p>
+          <p class="text-sm text-gray-500">JSON logs with incident_id, agent, tool, duration, and severity context on every line</p>
+        </div>
+
+        <!-- Metrics -->
+        <div class="glass p-6">
+          <div class="w-10 h-10 mb-4 rounded-xl bg-[#c084fc]/10 flex items-center justify-center">
+            <svg class="w-5 h-5 text-[#c084fc]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+          <p class="font-bold text-gray-200 mb-2">Live Metrics</p>
+          <p class="text-sm text-gray-500">Avg triage time, cost per incident, token usage, severity distribution — all in the dashboard</p>
+        </div>
+      </div>
+
+      <!-- Trace visualization -->
+      <div class="glass p-6 font-mono text-xs">
+        <p class="text-gray-600 mb-3">// Example Langfuse trace structure</p>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <div class="w-48 h-5 bg-[#2dd4bf]/20 rounded flex items-center px-2"><span class="text-[#2dd4bf]">intake_agent</span></div>
+            <span class="text-gray-600">12.3s</span>
+            <span class="text-gray-700">|</span>
+            <span class="text-gray-500">2,140 tokens</span>
+          </div>
+          <div class="flex items-center gap-2 pl-6">
+            <div class="w-36 h-5 bg-[#fbbf24]/20 rounded flex items-center px-2"><span class="text-[#fbbf24]">triage_agent</span></div>
+            <span class="text-gray-600">45.1s</span>
+            <span class="text-gray-700">|</span>
+            <span class="text-gray-500">8,420 tokens</span>
+          </div>
+          <div class="flex items-center gap-2 pl-12">
+            <div class="w-24 h-5 bg-[#fbbf24]/10 rounded flex items-center px-2"><span class="text-[#fbbf24]/70">module_search</span></div>
+            <span class="text-gray-600">0.8s</span>
+          </div>
+          <div class="flex items-center gap-2 pl-12">
+            <div class="w-24 h-5 bg-[#fbbf24]/10 rounded flex items-center px-2"><span class="text-[#fbbf24]/70">code_reader</span></div>
+            <span class="text-gray-600">1.2s</span>
+          </div>
+          <div class="flex items-center gap-2 pl-6">
+            <div class="w-36 h-5 bg-[#c084fc]/20 rounded flex items-center px-2"><span class="text-[#c084fc]">router_agent</span></div>
+            <span class="text-gray-600">18.7s</span>
+            <span class="text-gray-700">|</span>
+            <span class="text-gray-500">3,890 tokens</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 10: LIVE DEMO ═══════════════ -->
+  <section class="slide" id="slide-10" style="height:auto;min-height:100vh;padding:4rem 0;">
+    <div class="aurora-glow aurora-center" style="opacity:0.4;"></div>
+    <div class="slide-inner">
+      <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-4">10 — Live Demo</p>
+      <h2 class="text-4xl font-bold mb-2">See it in action</h2>
+      <p class="text-lg text-gray-400 mb-1">
+        Live at <a href="https://ssagentx.up.railway.app/" class="text-[#5eead4] hover:underline font-mono text-base">ssagentx.up.railway.app</a>
+      </p>
+      <p class="text-xs text-gray-600 mb-8">Click any screenshot to enlarge</p>
+
+      <!-- App Views -->
+      <p class="text-xs font-mono text-[#2dd4bf] uppercase tracking-widest mb-4">Frontend — 5 Views</p>
+      <div class="grid grid-cols-5 gap-3 mb-8">
+        <div>
+          <div class="screenshot-frame mb-2" data-caption="Report Incident Form">
+            <img src="assets/screenshots/form.png" alt="Incident report form" loading="lazy" />
+          </div>
+          <p class="text-[10px] text-gray-500 text-center">Report Form</p>
+        </div>
+        <div>
+          <div class="screenshot-frame mb-2" data-caption="Triage Results — severity, root cause, investigation steps">
+            <img src="assets/screenshots/triage-results.png" alt="Triage results" loading="lazy" />
+          </div>
+          <p class="text-[10px] text-gray-500 text-center">Triage Results</p>
+        </div>
+        <div>
+          <div class="screenshot-frame mb-2" data-caption="Incidents List — all incidents with status, severity, component">
+            <img src="assets/screenshots/incidents-list.png" alt="Incidents list" loading="lazy" />
+          </div>
+          <p class="text-[10px] text-gray-500 text-center">Incidents List</p>
+        </div>
+        <div>
+          <div class="screenshot-frame mb-2" data-caption="Metrics Dashboard — severity distribution, status, affected components">
+            <img src="assets/screenshots/metrics-dashboard.png" alt="Metrics dashboard" loading="lazy" />
+          </div>
+          <p class="text-[10px] text-gray-500 text-center">Metrics</p>
+        </div>
+        <div>
+          <div class="screenshot-frame mb-2" data-caption="Component Health Grid — real-time status of all Medusa modules">
+            <img src="assets/screenshots/scene4-health-dashboard.png" alt="Health dashboard" loading="lazy" />
+          </div>
+          <p class="text-[10px] text-gray-500 text-center">Health Grid</p>
+        </div>
+      </div>
+
+      <!-- Integration Proof -->
+      <p class="text-xs font-mono text-[#c084fc] uppercase tracking-widest mb-4">Integration Proof — Real APIs, Real Data</p>
+      <div class="grid grid-cols-4 gap-3">
+        <div>
+          <div class="screenshot-frame mb-2" data-caption="Linear Ticket — auto-created with severity, labels, runbook steps, and assignment">
+            <img src="assets/screenshots/linear-ticket-1.png" alt="Linear ticket with full details" loading="lazy" />
+          </div>
+          <p class="text-[10px] text-gray-500 text-center flex items-center justify-center gap-1">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-[#5e6ad2]"></span> Linear Ticket
+          </p>
+        </div>
+        <div>
+          <div class="screenshot-frame mb-2" data-caption="Slack #critical — P1 incident auto-posted with @channel mention and full context">
+            <img src="assets/screenshots/slack-message-critical.png" alt="Slack critical alert" loading="lazy" />
+          </div>
+          <p class="text-[10px] text-gray-500 text-center flex items-center justify-center gap-1">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-[#E01E5A]"></span> Slack Alert
+          </p>
+        </div>
+        <div>
+          <div class="screenshot-frame mb-2" data-caption="Email Notification — P1 incident email sent via Resend with full summary and next steps">
+            <img src="assets/screenshots/email-notification.png" alt="Email notification" loading="lazy" />
+          </div>
+          <p class="text-[10px] text-gray-500 text-center flex items-center justify-center gap-1">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-[#2dd4bf]"></span> Email (Resend)
+          </p>
+        </div>
+        <div>
+          <div class="screenshot-frame mb-2" data-caption="Langfuse Dashboard — 10 traces, 287 observations across all pipeline runs">
+            <img src="assets/screenshots/langfuse-trace.png" alt="Langfuse traces" loading="lazy" />
+          </div>
+          <p class="text-[10px] text-gray-500 text-center flex items-center justify-center gap-1">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span> Langfuse Traces
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 11: BY THE NUMBERS ═══════════════ -->
+  <section class="slide" id="slide-11">
+    <div class="aurora-glow aurora-bottom-left"></div>
+    <div class="slide-inner">
+      <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-4">11 — By the Numbers</p>
+      <h2 class="text-4xl font-bold mb-12">Production-grade from day one</h2>
+
+      <div class="grid grid-cols-3 gap-5">
+        <div class="glass metric-card p-8 text-center">
+          <p class="font-mono text-5xl font-bold text-[#2dd4bf] mb-2">~90s</p>
+          <p class="text-sm text-gray-400">End-to-end pipeline</p>
+          <p class="text-xs text-gray-600 mt-1">Report → Triage → Route</p>
+        </div>
+        <div class="glass metric-card p-8 text-center">
+          <p class="font-mono text-5xl font-bold text-[#4ade80] mb-2">$0.08</p>
+          <p class="text-sm text-gray-400">Avg cost per incident</p>
+          <p class="text-xs text-gray-600 mt-1">Claude Sonnet · $0.04–0.12 range</p>
+        </div>
+        <div class="glass metric-card p-8 text-center">
+          <p class="font-mono text-5xl font-bold text-[#60a5fa] mb-2">62</p>
+          <p class="text-sm text-gray-400">Automated tests</p>
+          <p class="text-xs text-gray-600 mt-1">Unit + integration · pytest</p>
+        </div>
+        <div class="glass metric-card p-8 text-center">
+          <p class="font-mono text-5xl font-bold text-[#fbbf24] mb-2">3</p>
+          <p class="text-sm text-gray-400">Specialized agents</p>
+          <p class="text-xs text-gray-600 mt-1">Intake · Triage · Router</p>
+        </div>
+        <div class="glass metric-card p-8 text-center">
+          <p class="font-mono text-5xl font-bold text-[#c084fc] mb-2">4</p>
+          <p class="text-sm text-gray-400">Real integrations</p>
+          <p class="text-xs text-gray-600 mt-1">Linear · Slack · Resend · Langfuse</p>
+        </div>
+        <div class="glass metric-card p-8 text-center">
+          <p class="font-mono text-5xl font-bold text-[#f87171] mb-2">6</p>
+          <p class="text-sm text-gray-400">Investigation tools</p>
+          <p class="text-xs text-gray-600 mt-1">Codebase-aware triage</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SLIDE 12: CLOSING ═══════════════ -->
+  <section class="slide" id="slide-12">
+    <div class="aurora-glow aurora-center" style="width:900px;height:900px;"></div>
+    <div class="slide-inner text-center">
+      <div class="mb-8">
+        <h1 class="text-7xl font-black tracking-tight">
+          Agent<span class="text-[#2dd4bf]">X</span>
+        </h1>
+      </div>
+      <p class="text-2xl font-light text-gray-400 mb-12 italic">
+        Because your on-call deserves to sleep.
+      </p>
+
+      <div class="flex items-center justify-center gap-8 mb-12">
+        <a href="https://github.com/marylin/softserve-agentx" class="glass-sm px-6 py-3 flex items-center gap-2 text-sm text-gray-300 hover:text-[#5eead4] transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          <span>github.com/marylin/softserve-agentx</span>
+        </a>
+        <a href="https://ssagentx.up.railway.app/" class="glass-sm px-6 py-3 flex items-center gap-2 text-sm text-gray-300 hover:text-[#5eead4] transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+          <span>Live Demo</span>
+        </a>
+      </div>
+
+      <div class="flex items-center justify-center gap-6 text-sm text-gray-500">
+        <span class="font-medium text-gray-300">Marylin Alarcon</span>
+        <span class="text-gray-700">|</span>
+        <span>SoftServe AgentX Hackathon 2026</span>
+        <span class="text-gray-700">|</span>
+        <span class="text-[#5eead4] font-mono text-xs">#AgentXHackathon</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ NAVIGATION JS ═══════════════ -->
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const counter = document.getElementById('slideCounter');
+    const progressBar = document.getElementById('progressBar');
+
+    // Update counter and progress on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const index = Array.from(slides).indexOf(entry.target) + 1;
+          counter.textContent = String(index).padStart(2, '0') + ' / ' + String(totalSlides).padStart(2, '0');
+          progressBar.style.width = ((index / totalSlides) * 100) + '%';
+        }
+      });
+    }, { threshold: 0.5 });
+
+    slides.forEach(slide => observer.observe(slide));
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      // Close lightbox on Escape
+      if (e.key === 'Escape') { closeLightbox(); return; }
+
+      // Don't navigate slides while lightbox is open
+      if (document.getElementById('lightbox').classList.contains('active')) return;
+
+      const current = Math.round(window.scrollY / window.innerHeight);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        const next = Math.min(current + 1, totalSlides - 1);
+        slides[next].scrollIntoView({ behavior: 'smooth' });
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prev = Math.max(current - 1, 0);
+        slides[prev].scrollIntoView({ behavior: 'smooth' });
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        slides[0].scrollIntoView({ behavior: 'smooth' });
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        slides[totalSlides - 1].scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+
+    // Lightbox — click any screenshot to enlarge
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxCaption = document.getElementById('lightboxCaption');
+
+    document.querySelectorAll('.screenshot-frame').forEach(frame => {
+      frame.addEventListener('click', () => {
+        const img = frame.querySelector('img');
+        if (!img) return;
+        lightboxImg.src = img.src;
+        lightboxImg.alt = img.alt;
+        lightboxCaption.textContent = frame.dataset.caption || img.alt;
+        lightbox.classList.add('active');
+      });
+    });
+
+    function closeLightbox() {
+      lightbox.classList.remove('active');
+    }
+  </script>
+</body>
+</html>
