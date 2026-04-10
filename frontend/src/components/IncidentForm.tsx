@@ -116,7 +116,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
   };
 
   const inputClasses =
-    "w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors transition-shadow duration-150";
+    "w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 placeholder-gray-500 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 transition-colors transition-shadow duration-150";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -185,7 +185,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
           id="affected-area"
           value={affectedArea}
           onChange={(e) => setAffectedArea(e.target.value)}
-          className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors transition-shadow duration-150"
+          className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100 focus:outline-none focus:ring-1 focus:ring-teal-400 focus:border-teal-400 transition-colors transition-shadow duration-150"
         >
           <option value="">Select affected area...</option>
           {areas.map(area => (
@@ -207,7 +207,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
                 onClick={handleVoice}
                 aria-label={listening ? "Stop voice recording" : "Start voice input"}
                 aria-pressed={listening}
-                className={`text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded min-h-[44px] sm:min-h-0 px-1 ${listening ? "text-red-400" : "text-indigo-400 hover:text-indigo-300"}`}
+                className={`text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 rounded min-h-[44px] sm:min-h-0 px-1 ${listening ? "text-red-400" : "text-teal-300 hover:text-teal-200"}`}
               >
                 <Mic className="w-3 h-3" aria-hidden="true" />
                 {listening ? "Stop" : "Dictate"}
@@ -217,7 +217,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
               type="button"
               onClick={handleSuggest}
               disabled={!title || suggesting}
-              className="text-sm text-indigo-400 hover:text-indigo-300 disabled:text-gray-600 flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded min-h-[44px] sm:min-h-0 px-1"
+              className="text-sm text-teal-300 hover:text-teal-200 disabled:text-gray-600 flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 rounded min-h-[44px] sm:min-h-0 px-1"
             >
               {suggesting ? (
                 <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
@@ -258,7 +258,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="flex items-center gap-2 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400"
           >
             <Paperclip className="w-4 h-4" aria-hidden="true" />
             Attach files
@@ -293,7 +293,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
                   type="button"
                   onClick={() => removeFile(i)}
                   aria-label={"Remove " + file.name}
-                  className="text-gray-500 hover:text-red-400 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
+                  className="text-gray-500 hover:text-red-400 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 rounded"
                 >
                   <X className="w-4 h-4" aria-hidden="true" />
                 </button>
@@ -306,7 +306,7 @@ export default function IncidentForm({ onSubmitted }: Props) {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full sm:w-auto flex items-center justify-center gap-2 rounded bg-indigo-600 px-5 py-2.5 min-h-[44px] text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        className="w-full sm:w-auto flex items-center justify-center gap-2 rounded bg-teal-500 px-5 py-2.5 min-h-[44px] text-sm font-medium text-white hover:bg-teal-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400"
       >
         {submitting && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
         {submitting ? "Submitting..." : "Submit incident"}

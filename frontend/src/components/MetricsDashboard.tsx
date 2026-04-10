@@ -17,7 +17,7 @@ const STATUS_COLORS: Record<string, string> = {
   received: "bg-gray-400",
   triaging: "bg-yellow-400",
   triaged: "bg-blue-400",
-  routed: "bg-indigo-400",
+  routed: "bg-teal-400",
   resolved: "bg-green-400",
   failed: "bg-red-400",
 };
@@ -180,7 +180,7 @@ export default function MetricsDashboard() {
                       <span className="text-sm text-gray-300 w-32 sm:w-48 truncate">{component}</span>
                       <div className="flex-1 h-6 bg-gray-800 rounded overflow-hidden">
                         <div
-                          className="h-full bg-indigo-600 rounded"
+                          className="h-full bg-teal-500 rounded"
                           style={{ width: `${pct}%` }}
                         />
                       </div>

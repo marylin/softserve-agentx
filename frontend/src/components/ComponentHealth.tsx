@@ -203,7 +203,7 @@ export default function ComponentHealth({ onSelectComponent }: Props) {
                   onSelectComponent?.(comp.name);
                 }
               }}
-              className="flex items-center justify-between px-4 py-3 min-h-[44px] border-b border-gray-800 last:border-0 cursor-pointer hover:bg-gray-800/50 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+              className="flex items-center justify-between px-4 py-3 min-h-[44px] border-b border-gray-800 last:border-0 cursor-pointer hover:bg-gray-800/50 focus:outline-none focus:ring-1 focus:ring-teal-400 transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${cfg.dotColor}${comp.status === "critical" ? " animate-subtle-pulse" : ""}`} />

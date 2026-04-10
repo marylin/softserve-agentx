@@ -2,7 +2,7 @@
 
 :root {
   /*
-   * Color system: Tailwind's gray-950/900/800 scale with indigo-500/600 accent.
+   * Color system: Tailwind's gray-950/900/800 scale with teal-400/500 accent.
    * Semantic colors: red (P1/critical), amber (P2/high), yellow (P3/medium), gray (P4/low).
    * Tailwind's built-in color scale IS the design token system -- no separate abstraction needed.
    */
@@ -19,8 +19,8 @@
   --leading-normal: 1.5;
   --leading-relaxed: 1.625;
 
-  --font-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, "SF Mono", "Cascadia Code", monospace;
+  --font-sans: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Azeret Mono", ui-monospace, "SF Mono", "Cascadia Code", monospace;
 }
 
 html {
@@ -31,9 +31,8 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.011em;
+  letter-spacing: -0.005em;
   line-height: var(--leading-normal);
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 /* Tabular numbers for data-heavy views */

@@ -80,7 +80,7 @@ export default function App() {
       <header className="border-b border-gray-800 px-4 sm:px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 shrink-0">
-            <Shield className="w-6 h-6 text-indigo-500" />
+            <Shield className="w-6 h-6 text-teal-400" />
             <h1 className="text-lg font-semibold tracking-tight text-gray-100">
               AgentX <span className="hidden sm:inline font-normal text-gray-400">SRE Triage</span>
             </h1>
@@ -88,9 +88,9 @@ export default function App() {
           <nav className="flex flex-wrap gap-1 sm:gap-4 justify-end">
             <button
               onClick={() => navigate("form")}
-              className={`min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 flex items-center gap-1.5 ${
+              className={`min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 flex items-center gap-1.5 ${
                 view === "form"
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-teal-500 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
@@ -100,25 +100,25 @@ export default function App() {
             </button>
             <button
               onClick={() => navigate("list")}
-              className={`relative min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 flex items-center gap-1.5 ${
+              className={`relative min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 flex items-center gap-1.5 ${
                 view === "list"
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-teal-500 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
               <List className="w-4 h-4 sm:hidden" />
               Incidents
               {alertCounts.open > 0 && (
-                <span className="absolute -top-1 -right-1 bg-indigo-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-teal-400 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                   {alertCounts.open}
                 </span>
               )}
             </button>
             <button
               onClick={() => navigate("metrics")}
-              className={`min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 flex items-center gap-1.5 ${
+              className={`min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 flex items-center gap-1.5 ${
                 view === "metrics"
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-teal-500 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
@@ -127,9 +127,9 @@ export default function App() {
             </button>
             <button
               onClick={() => navigate("health")}
-              className={`relative min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 flex items-center gap-1.5 ${
+              className={`relative min-h-[44px] sm:min-h-0 px-2 sm:px-4 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 flex items-center gap-1.5 ${
                 view === "health"
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-teal-500 text-white"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
@@ -143,7 +143,7 @@ export default function App() {
               href={`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/docs`}
               target="_blank"
               rel="noopener noreferrer"
-              className="min-h-[44px] sm:min-h-0 text-gray-500 hover:text-gray-300 text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-2 sm:px-0"
+              className="min-h-[44px] sm:min-h-0 text-gray-500 hover:text-gray-300 text-sm flex items-center gap-1 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 rounded px-2 sm:px-0"
             >
               <FileText className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">API</span>

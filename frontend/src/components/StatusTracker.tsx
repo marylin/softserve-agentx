@@ -153,7 +153,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       <div className="space-y-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
+          className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 rounded"
         >
           <ArrowLeft className="w-4 h-4" /> Back to incidents
         </button>
@@ -168,7 +168,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
   if (!incident) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-teal-400" />
       </div>
     );
   }
@@ -204,10 +204,10 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
               {i > 0 && (
                 <>
                   <div
-                    className={`sm:hidden w-px h-4 ml-2.5 ${done ? "bg-indigo-500" : "bg-gray-700"}`}
+                    className={`sm:hidden w-px h-4 ml-2.5 ${done ? "bg-teal-400" : "bg-gray-700"}`}
                   />
                   <div
-                    className={`hidden sm:block h-px w-6 ${done ? "bg-indigo-500" : "bg-gray-700"}`}
+                    className={`hidden sm:block h-px w-6 ${done ? "bg-teal-400" : "bg-gray-700"}`}
                   />
                 </>
               )}
@@ -215,9 +215,9 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                 {failed && i === 0 ? (
                   <XCircle className="w-5 h-5 text-red-500" />
                 ) : done ? (
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500" />
+                  <CheckCircle2 className="w-5 h-5 text-teal-400" />
                 ) : isInProgress ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />
+                  <Loader2 className="w-5 h-5 animate-spin text-teal-400" />
                 ) : (
                   <Circle className="w-5 h-5 text-gray-600" />
                 )}
@@ -257,7 +257,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
               setRetrying(false);
             }}
             disabled={retrying}
-            className="mt-3 flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm rounded transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="mt-3 flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm rounded transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400"
           >
             {retrying && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
             {retrying ? "Retrying..." : "Retry triage"}
@@ -270,7 +270,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       {incident.triage && (
         <section className="animate-slide-up space-y-4 rounded-lg border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
-            <FileText className="w-4 h-4 text-indigo-500" />
+            <FileText className="w-4 h-4 text-teal-400" />
             Triage Results
           </h3>
 
@@ -332,7 +332,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
               <ul className="space-y-1">
                 {incident.triage.code_references.map((ref, i) => (
                   <li key={i} className="text-xs text-gray-300">
-                    <code className="rounded bg-gray-800 px-1.5 py-0.5 text-indigo-400">
+                    <code className="rounded bg-gray-800 px-1.5 py-0.5 text-teal-300">
                       {ref.file}
                       {ref.line != null && `:${ref.line}`}
                     </code>{" "}
@@ -364,7 +364,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       {similarIncidents.length > 0 && (
         <section className="animate-slide-up space-y-3 rounded-lg border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
-            <Link2 className="w-4 h-4 text-indigo-500" />
+            <Link2 className="w-4 h-4 text-teal-400" />
             Related Incidents
           </h3>
           <ul className="divide-y divide-gray-800">
@@ -381,7 +381,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                 {sim.shared_modules.map((mod) => (
                   <span
                     key={mod}
-                    className="rounded bg-indigo-500/10 border border-indigo-500/30 px-1.5 py-0.5 text-xs text-indigo-400"
+                    className="rounded bg-teal-400/10 border border-teal-400/30 px-1.5 py-0.5 text-xs text-teal-300"
                   >
                     {mod}
                   </span>
@@ -396,7 +396,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
       {incident.routing && (
         <section className="animate-slide-up space-y-3 rounded-lg border border-gray-800 bg-gray-900 p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
-            <ExternalLink className="w-4 h-4 text-indigo-500" />
+            <ExternalLink className="w-4 h-4 text-teal-400" />
             Notifications & Ticket
           </h3>
 
@@ -408,7 +408,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                   href={incident.routing.linear_ticket_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-400 hover:underline focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
+                  className="text-teal-300 hover:underline focus:outline-none focus:ring-1 focus:ring-teal-400 rounded"
                 >
                   Linear ticket: {incident.routing.linear_ticket_id}
                 </a>
@@ -436,7 +436,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
           { label: "Received", time: incident.created_at, color: "bg-gray-500" },
           { label: "Triaging", time: incident.created_at, color: "bg-yellow-500" },
           { label: "Triaged", time: incident.triage?.created_at ?? null, color: "bg-blue-500" },
-          { label: "Routed", time: incident.routing?.created_at ?? null, color: "bg-indigo-500" },
+          { label: "Routed", time: incident.routing?.created_at ?? null, color: "bg-teal-400" },
           { label: "Resolved", time: incident.routing?.resolved_at ?? null, color: "bg-green-500" },
         ];
         const active = entries.filter((e) => e.time !== null);
@@ -465,7 +465,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
         return (
           <section className="animate-slide-up space-y-3 rounded-lg border border-gray-800 bg-gray-900 p-5">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-200">
-              <Clock className="w-4 h-4 text-indigo-500" />
+              <Clock className="w-4 h-4 text-teal-400" />
               Timeline
             </h3>
             <div className="relative ml-2">
@@ -536,7 +536,7 @@ export default function StatusTracker({ incidentId, onBack }: Props) {
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-indigo-400 hover:underline"
+                          className="text-teal-300 hover:underline"
                         >
                           {att.original_filename}
                         </a>

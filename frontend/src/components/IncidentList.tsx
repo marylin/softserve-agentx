@@ -35,7 +35,7 @@ interface Props {
 const statusColors: Record<IncidentStatus, string> = {
   received: "text-blue-400",
   triaging: "text-yellow-400",
-  triaged: "text-indigo-400",
+  triaged: "text-teal-300",
   routed: "text-purple-400",
   resolved: "text-green-400",
   failed: "text-red-400",
@@ -53,7 +53,7 @@ const statusLabel: Record<IncidentStatus, string> = {
 const ALL_SEVERITIES: SeverityLevel[] = ["P1", "P2", "P3", "P4"];
 const ALL_STATUSES: IncidentStatus[] = ["received", "triaging", "triaged", "routed", "resolved", "failed"];
 
-const filterInputClasses = "bg-gray-900 border border-gray-700 rounded px-3 py-2 sm:py-1.5 text-sm text-gray-100 transition-colors transition-shadow duration-150 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-h-[44px] sm:min-h-0";
+const filterInputClasses = "bg-gray-900 border border-gray-700 rounded px-3 py-2 sm:py-1.5 text-sm text-gray-100 transition-colors transition-shadow duration-150 focus:outline-none focus:ring-1 focus:ring-teal-400 focus:border-teal-400 min-h-[44px] sm:min-h-0";
 
 export default function IncidentList({ onSelect, onReportNew }: Props) {
   const [incidents, setIncidents] = useState<IncidentListItem[]>([]);
@@ -132,7 +132,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
           <button
             onClick={handleExport}
             disabled={incidents.length === 0}
-            className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400"
           >
             <Download className="w-4 h-4" />
             Export JSON
@@ -142,7 +142,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
               setLoading(true);
               fetch_();
             }}
-            className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -194,13 +194,13 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
 
       {loading && incidents.length === 0 ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+          <Loader2 className="w-6 h-6 animate-spin text-teal-400" />
         </div>
       ) : incidents.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 mb-3">No incidents reported yet. When you submit an incident, it will appear here with live triage status.</p>
           {onReportNew && (
-            <button onClick={onReportNew} className="text-indigo-400 hover:text-indigo-300 text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded">
+            <button onClick={onReportNew} className="text-teal-300 hover:text-teal-200 text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 rounded">
               Report your first incident
             </button>
           )}
@@ -208,7 +208,7 @@ export default function IncidentList({ onSelect, onReportNew }: Props) {
       ) : filteredIncidents.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-500">
           No incidents match your filters.
-          <button onClick={() => { setSearchText(""); setSeverityFilter(""); setStatusFilter(""); }} className="text-indigo-400 hover:text-indigo-300 text-sm ml-2 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded">
+          <button onClick={() => { setSearchText(""); setSeverityFilter(""); setStatusFilter(""); }} className="text-teal-300 hover:text-teal-200 text-sm ml-2 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 rounded">
             Clear filters
           </button>
         </p>

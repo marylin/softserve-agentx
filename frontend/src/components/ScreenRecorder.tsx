@@ -106,7 +106,7 @@ export default function ScreenRecorder({ onRecorded }: Props) {
       type="button"
       onClick={stop}
       aria-label={"Stop recording, " + fmt(elapsed) + " elapsed"}
-      className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/20 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/20 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400"
     >
       <Square className="w-4 h-4" />
       Stop {fmt(elapsed)} / {fmt(MAX_SECONDS)}
@@ -116,7 +116,7 @@ export default function ScreenRecorder({ onRecorded }: Props) {
       type="button"
       onClick={start}
       aria-label="Record screen"
-      className="flex items-center gap-2 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      className="flex items-center gap-2 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400"
     >
       <Video className="w-4 h-4" />
       Record screen
