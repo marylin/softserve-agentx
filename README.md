@@ -168,9 +168,11 @@ docker compose up --build
 
 See [QUICKGUIDE.md](QUICKGUIDE.md) for detailed setup instructions including API key links and troubleshooting.
 
-## Screenshots
+## Demo Video
 
-See demo video.
+[![AgentX Demo](https://img.youtube.com/vi/d4C0o-WMF8E/maxresdefault.jpg)](https://youtu.be/d4C0o-WMF8E)
+
+Watch the full 3-minute demo: **https://youtu.be/d4C0o-WMF8E**
 
 ## How It Works
 
@@ -194,11 +196,14 @@ See demo video.
 - **Backend API:** https://ssagentx-b.up.railway.app
 - **Slack workspace:** [Join ss-agentx](https://join.slack.com/t/ss-agentx/shared_invite/zt-3uykoe9oh-Y~eBDCd8QPs3Y6ipjaSFQw)
 
-## Related Documentation
+## Documentation
 
-- [AGENTS_USE.md](AGENTS_USE.md) -- Detailed agent documentation (hackathon submission format)
-- [SCALING.md](SCALING.md) -- Scaling strategy and assumptions
-- [QUICKGUIDE.md](QUICKGUIDE.md) -- Step-by-step setup guide
+- [AGENTS_USE.md](AGENTS_USE.md) -- Agent documentation and evidence
+- [ARCHITECTURE.md](ARCHITECTURE.md) -- System design and decisions
+- [SECURITY.md](SECURITY.md) -- Security architecture
+- [SCALING.md](SCALING.md) -- Scaling strategy and costs
+- [QUICKGUIDE.md](QUICKGUIDE.md) -- Setup and run instructions
+- [agent-config.yaml](backend/agent-config.yaml) -- Agent configuration
 
 ## License
 
